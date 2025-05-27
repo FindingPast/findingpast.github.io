@@ -44,7 +44,7 @@
     .tab-content {
       display: none;
       width: 100%;
-      max-width: 600px;
+      max-width: 960px;
       text-align: center;
     }
 
@@ -52,21 +52,28 @@
       display: block;
     }
 
-    .preview-inner {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .preview-inner img {
-      max-width: 100%;
-      border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
-
-    .preview-inner audio {
+    #previewContainer {
+      aspect-ratio: 16 / 9;
       width: 100%;
-      margin-top: 15px;
+      background: black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    #previewSlide {
+      max-height: 100%;
+      max-width: 100%;
+      object-fit: contain;
+    }
+
+    #previewContainer:fullscreen {
+      background: black;
+    }
+
+    #previewAudio {
+      display: none;
     }
 
     .preview-controls {
@@ -97,6 +104,20 @@
       cursor: pointer;
     }
 
+    .slider-container {
+      margin-top: 20px;
+    }
+
+    .slider-container label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .slider-container input {
+      width: 80%;
+    }
+
     a.back {
       margin-top: 30px;
       display: inline-block;
@@ -105,20 +126,6 @@
       color: white;
       padding: 10px 20px;
       border-radius: 20px;
-    }
-
-    #previewContainer:fullscreen {
-      background: black;
-      justify-content: center;
-    }
-
-    #previewContainer:fullscreen img {
-      max-height: 70vh;
-      object-fit: contain;
-    }
-
-    #previewContainer:fullscreen audio {
-      width: 80%;
     }
   </style>
 </head>
@@ -132,15 +139,15 @@
   </div>
 
   <div id="preview" class="tab-content active">
-    <div id="previewContainer" class="preview-inner">
-      <img id="previewImage" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Preview Image">
-      <audio id="previewAudio" controls loop>
-        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
-      </audio>
-      <div class="preview-controls">
-        <button onclick="toggleFullscreen()">Fullscreen</button>
-        <button onclick="downloadAsVideo()">Download Video (WIP)</button>
-      </div>
+    <div id="previewContainer">
+      <img id="previewSlide" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Preview Slideshow">
+    </div>
+    <audio id="previewAudio" autoplay loop>
+      <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
+    </audio>
+    <div class="preview-controls">
+      <button onclick="toggleFullscreen()">Fullscreen</button>
+      <button onclick="downloadAsVideo()">Download Video</button>
     </div>
   </div>
 
@@ -149,6 +156,11 @@
     <div class="nav-buttons">
       <button onclick="prevImage()">Previous</button>
       <button onclick="nextImage()">Next</button>
+    </div>
+    <div class="slider-container">
+      <label for="intervalSlider">Image Change Interval (seconds):</label>
+      <input type="range" id="intervalSlider" min="1" max="20" value="5" oninput="updateInterval(this.value)">
+      <div id="intervalValue">5 seconds</div>
     </div>
   </div>
 
@@ -168,30 +180,33 @@
       "https://i.ibb.co/yWctL4m/example3.jpg"
     ];
     let currentImageIndex = 0;
+    let intervalTime = 5000; // Default 5 seconds
+    let slideshowInterval;
 
     function switchTab(tab) {
       tabs.forEach(t => {
         document.getElementById(t).classList.remove('active');
-        document.getElementById(`tab-${t}`)?.classList.remove('active');
       });
       document.getElementById(tab).classList.add('active');
-      document.getElementById(`tab-${tab}`)?.classList.add('active');
     }
 
     function updateImageDisplays() {
-      const current = imageUrls[currentImageIndex];
-      document.getElementById("imageSlide").src = current;
-      document.getElementById("previewImage").src = current;
+      document.getElementById("imageSlide").src = imageUrls[currentImageIndex];
     }
 
     function nextImage() {
       currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
-      updateImageDisplays();
+      updateAllDisplays();
     }
 
     function prevImage() {
       currentImageIndex = (currentImageIndex - 1 + imageUrls.length) % imageUrls.length;
-      updateImageDisplays();
+      updateAllDisplays();
+    }
+
+    function updateAllDisplays() {
+      document.getElementById("imageSlide").src = imageUrls[currentImageIndex];
+      document.getElementById("previewSlide").src = imageUrls[currentImageIndex];
     }
 
     function toggleFullscreen() {
@@ -204,10 +219,26 @@
     }
 
     function downloadAsVideo() {
-      alert("Feature coming soon: render slideshow + music as downloadable video.");
+      alert("Generating downloadable video preview... (WIP)");
     }
 
-    updateImageDisplays();
+    function updateInterval(value) {
+      document.getElementById("intervalValue").textContent = value + " seconds";
+      intervalTime = value * 1000;
+      clearInterval(slideshowInterval);
+      startSlideshow();
+    }
+
+    function startSlideshow() {
+      slideshowInterval = setInterval(() => {
+        currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+        updateAllDisplays();
+      }, intervalTime);
+    }
+
+    // Initial startup
+    updateAllDisplays();
+    startSlideshow();
   </script>
 </body>
 </html>
