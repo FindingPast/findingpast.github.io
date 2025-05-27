@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Frutiger Aero - Video Export</title>
+  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.4/dist/ffmpeg.min.js"></script>
   <style>
     body {
       font-family: Segoe UI, sans-serif;
@@ -37,9 +38,8 @@
   <a id="downloadLink" href="#" download="frutiger_aero_preview.webm">Click here if download doesn't start</a>
   <p id="status"></p>
 
-  <script type="module">
-    import { createFFmpeg, fetchFile } from "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.2/dist/ffmpeg.min.mjs";
-
+  <script>
+    const { createFFmpeg, fetchFile } = FFmpeg;
     const ffmpeg = createFFmpeg({ log: true });
 
     const imageUrls = [
@@ -63,7 +63,7 @@
         status.textContent = "Loading FFmpeg...";
         if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
-        const duration = 5; // 5 sec per image
+        const duration = 5; // seconds per image
         const totalFrames = imageUrls.length * duration;
         const frames = [];
 
