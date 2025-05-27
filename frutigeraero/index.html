@@ -72,6 +72,24 @@
       background: black;
     }
 
+    .image-square-wrapper {
+      width: 400px;
+      height: 400px;
+      background: transparent;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    img.slideshow {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
     .preview-controls {
       margin-top: 15px;
     }
@@ -153,7 +171,9 @@
   </div>
 
   <div id="images" class="tab-content">
-    <img id="imageSlide" class="slideshow" src="../assets/images/Vibes.jpeg" alt="Image Slide">
+    <div class="image-square-wrapper">
+      <img id="imageSlide" class="slideshow" src="../assets/images/Vibes.jpeg" alt="Image Slide">
+    </div>
     <div class="nav-buttons">
       <button onclick="prevImage()">Previous</button>
       <button onclick="nextImage()">Next</button>
