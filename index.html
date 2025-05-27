@@ -5,23 +5,24 @@
   <style>
     body {
       margin: 0;
-      background: linear-gradient(to bottom right, #b3e5fc, #e1f5fe);
       font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      background-image: url('https://i.ibb.co/PZFmYp67/home-Index-BG.jpg');
       background-size: cover;
       background-position: center;
+      background-repeat: no-repeat;
     }
+
     h1 {
       font-size: 3em;
       color: white;
       text-shadow: 2px 2px 5px #000;
       margin-bottom: 20px;
     }
+
     .buttons a {
       display: inline-block;
       text-decoration: none;
@@ -34,6 +35,7 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       transition: transform 0.2s;
     }
+
     .buttons a:hover {
       transform: scale(1.1);
     }
@@ -45,5 +47,15 @@
     <a href="frutigeraero/">Frutiger Aero</a>
     <a href="liminal/">Liminal</a>
   </div>
+
+  <script>
+    const backgrounds = [
+      'https://i.ibb.co/Zp9VXxDC/home-Index-BG1.jpg',
+      'https://i.ibb.co/sYHd1ty/home-Index-BG2.jpg',
+      'https://i.ibb.co/TxMgBGTv/home-Index-BG3.png'
+    ];
+    const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+    document.body.style.backgroundImage = `url('${randomBg}')`;
+  </script>
 </body>
 </html>
