@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Frutiger Aero - Video Export</title>
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.2/dist/ffmpeg.min.js"></script>
+  <style>
+    body {
+      font-family: Segoe UI, sans-serif;
+      background: linear-gradient(to bottom right, #b3e5fc, #e1f5fe);
+      color: #0d47a1;
+      text-align: center;
+      padding: 2em;
+    }
+    #previewCanvas {
+      display: none;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      border: none;
+      background: #00796b;
+      color: white;
+      border-radius: 20px;
+      cursor: pointer;
+      margin: 1em;
+    }
+    #downloadLink {
+      display: none;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Frutiger Aero Video Export</h1>
+  <p>This will render a video of your slideshow with music and let you download it!</p>
+  <canvas id="previewCanvas" width="1280" height="720"></canvas>
+  <button onclick="generateVideo()">Download Video</button>
+  <a id="downloadLink" href="#" download="frutiger_aero_preview.webm">Click here if download doesn't start</a>
+  <p id="status"></p>
+
+  <script>
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    const ffmpeg = createFFmpeg({ log: true });
+
+    const imageUrls = [
+      "../assets/images/Vibes.jpeg",
+      "../assets/images/Open.jpeg",
+      "../assets/images/Life.jpeg",
+      "../assets/images/Gallery.jpeg",
+      "../assets/images/Frutiger Eco.jpeg"
+    ];
+    const audioUrl = "../assets/music/Frutiger.mp3";
+    const canvas = document.getElementById("previewCanvas");
+    const ctx = canvas.getContext("2d");
+    const status = document.getElementById("status");
+
+    async function drawFrames() {
+      const duration = 5; // seconds per image
+      const fps = 1; // 1 frame per second
+      const totalFrames = imageUrls.length * duration;
+      const frames = [];
+
+      for (let i = 0; i < totalFrames; i++) {
+        const imgIndex = Math.floor(i / duration);
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = imageUrls[imgIndex];
+        await new Promise(resolve => {
+          img.onload = () => {
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const ratio = Math.min(canvas.width / img.width, canvas.height / img.height);
+            const w = img.width * ratio;
+            const h = img.height * ratio;
+            const x = (canvas.width - w) / 2;
+            const y = (canvas.height - h) / 2;
+            ctx.drawImage(img, x, y, w, h);
+            canvas.toBlob(blob => {
+              frames.push(blob);
+              resolve();
+            }, 'image/jpeg');
+          };
+        });
+      }
+
+      return frames;
+    }
+
+    async function generateVideo() {
+      status.textContent = "Preparing FFmpeg...";
+      if (!ffmpeg.isLoaded()) await ffmpeg.load();
+
+      const frames = await drawFrames();
+      status.textContent = "Encoding frames...";
+
+      for (let i = 0; i < frames.length; i++) {
+        ffmpeg.FS('writeFile', `frame${i.toString().padStart(3, '0')}.jpg`, await fetchFile(frames[i]));
+      }
+
+      ffmpeg.FS('writeFile', 'audio.mp3', await fetchFile(audioUrl));
+
+      await ffmpeg.run(
+        '-framerate', '1',
+        '-i', 'frame%03d.jpg',
+        '-i', 'audio.mp3',
+        '-c:v', 'libvpx-vp9',
+        '-c:a', 'libopus',
+        '-b:v', '1M',
+        '-shortest',
+        'output.webm'
+      );
+
+      const data = ffmpeg.FS('readFile', 'output.webm');
+      const videoBlob = new Blob([data.buffer], { type: 'video/webm' });
+      const videoUrl = URL.createObjectURL(videoBlob);
+
+      const downloadLink = document.getElementById("downloadLink");
+      downloadLink.href = videoUrl;
+      downloadLink.style.display = "inline-block";
+      downloadLink.click();
+      status.textContent = "Video is ready!";
+    }
+  </script>
+</body>
+</html>
