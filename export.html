@@ -38,19 +38,22 @@
   <p id="status"></p>
 
   <script type="module">
-    import { createFFmpeg, fetchFile } from "https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.mjs";
+    import { createFFmpeg, fetchFile } from "./ffmpeg/ffmpeg.min.mjs";
 
-    const ffmpeg = createFFmpeg({ log: true });
+    const ffmpeg = createFFmpeg({
+      corePath: "./ffmpeg/ffmpeg-core.js",
+      log: true
+    });
 
     const imageUrls = [
-      "../assets/images/Vibes.jpeg",
-      "../assets/images/Open.jpeg",
-      "../assets/images/Life.jpeg",
-      "../assets/images/Gallery.jpeg",
-      "../assets/images/Frutiger Eco.jpeg"
+      "./assets/images/Vibes.jpeg",
+      "./assets/images/Open.jpeg",
+      "./assets/images/Life.jpeg",
+      "./assets/images/Gallery.jpeg",
+      "./assets/images/Frutiger Eco.jpeg"
     ];
 
-    const audioUrl = "../assets/music/Mii Editor - Nintendo.mp3";
+    const audioUrl = "./assets/music/Mii Editor - Nintendo.mp3";
     const canvas = document.getElementById("previewCanvas");
     const ctx = canvas.getContext("2d");
     const status = document.getElementById("status");
@@ -63,7 +66,7 @@
         status.textContent = "Loading FFmpeg...";
         if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
-        const duration = 5; // 5 sec per image
+        const duration = 5; // seconds per image
         const totalFrames = imageUrls.length * duration;
         const frames = [];
 
