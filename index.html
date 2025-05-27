@@ -29,10 +29,10 @@
       text-decoration: none;
       font-size: 1.2em;
       color: white;
-      background: linear-gradient(to bottom right, #00bcd4, #009688);
+      background: linear-gradient(180deg, #00e5ff, #009688); /* Light top → dark bottom */
       padding: 15px 25px;
       margin: 10px;
-      border-radius: 15px;
+      border-radius: 25px; /* More rounded buttons */
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       transition: transform 0.2s;
     }
@@ -55,8 +55,24 @@
       'https://i.ibb.co/sYHd1ty/home-Index-BG2.jpg',
       'https://i.ibb.co/TxMgBGTv/home-Index-BG3.png'
     ];
-    const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
-    document.body.style.backgroundImage = `url('${randomBg}')`;
+
+    const CACHE_KEY = 'fp_background';
+    const CACHE_TIME_KEY = 'fp_background_time';
+    const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+
+    const now = Date.now();
+    const lastPick = localStorage.getItem(CACHE_TIME_KEY);
+    const storedBg = localStorage.getItem(CACHE_KEY);
+
+    let chosenBg = storedBg;
+
+    if (!storedBg || !lastPick || (now - parseInt(lastPick)) > TWELVE_HOURS_MS) {
+      chosenBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+      localStorage.setItem(CACHE_KEY, chosenBg);
+      localStorage.setItem(CACHE_TIME_KEY, now.toString());
+    }
+
+    document.body.style.backgroundImage = `url('${chosenBg}')`;
   </script>
 </body>
 </html>
