@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>Frutiger Aero - Video Export</title>
-  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.2/dist/ffmpeg.min.js"></script>
   <style>
     body {
       font-family: Segoe UI, sans-serif;
@@ -34,25 +33,14 @@
   <h1>Frutiger Aero Video Export</h1>
   <p>This will render a video of your slideshow with music and let you download it!</p>
   <canvas id="previewCanvas" width="1280" height="720"></canvas>
-  <button onclick="generateVideo()">Download Video</button>
+  <button id="renderBtn">Download Video</button>
   <a id="downloadLink" href="#" download="frutiger_aero_preview.webm">Click here if download doesn't start</a>
   <p id="status"></p>
 
-  <script>
-    let ffmpeg;
-    let createFFmpeg, fetchFile;
+  <script type="module">
+    import { createFFmpeg, fetchFile } from "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.2/dist/ffmpeg.min.mjs";
 
-    // Wait for FFmpeg to load safely
-    window.addEventListener("DOMContentLoaded", () => {
-      const interval = setInterval(() => {
-        if (window.FFmpeg && window.FFmpeg.createFFmpeg) {
-          ({ createFFmpeg, fetchFile } = FFmpeg);
-          ffmpeg = createFFmpeg({ log: true });
-          clearInterval(interval);
-          document.getElementById("status").textContent = "FFmpeg is ready!";
-        }
-      }, 200);
-    });
+    const ffmpeg = createFFmpeg({ log: true });
 
     const imageUrls = [
       "../assets/images/Vibes.jpeg",
@@ -61,81 +49,80 @@
       "../assets/images/Gallery.jpeg",
       "../assets/images/Frutiger Eco.jpeg"
     ];
+
     const audioUrl = "../assets/music/Mii Editor - Nintendo.mp3";
     const canvas = document.getElementById("previewCanvas");
     const ctx = canvas.getContext("2d");
     const status = document.getElementById("status");
+    const renderBtn = document.getElementById("renderBtn");
+    const downloadLink = document.getElementById("downloadLink");
 
-    async function drawFrames() {
-      const duration = 5; // seconds per image
-      const totalFrames = imageUrls.length * duration;
-      const frames = [];
+    renderBtn.addEventListener("click", async () => {
+      try {
+        renderBtn.disabled = true;
+        status.textContent = "Loading FFmpeg...";
+        if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
-      for (let i = 0; i < totalFrames; i++) {
-        const imgIndex = Math.floor(i / duration);
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.src = imageUrls[imgIndex];
-        await new Promise(resolve => {
-          img.onload = () => {
-            ctx.fillStyle = "#000";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            const ratio = Math.min(canvas.width / img.width, canvas.height / img.height);
-            const w = img.width * ratio;
-            const h = img.height * ratio;
-            const x = (canvas.width - w) / 2;
-            const y = (canvas.height - h) / 2;
-            ctx.drawImage(img, x, y, w, h);
-            canvas.toBlob(blob => {
-              frames.push(blob);
-              resolve();
-            }, 'image/jpeg');
-          };
-        });
+        const duration = 5; // 5 sec per image
+        const totalFrames = imageUrls.length * duration;
+        const frames = [];
+
+        for (let i = 0; i < totalFrames; i++) {
+          const imgIndex = Math.floor(i / duration);
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.src = imageUrls[imgIndex];
+          await new Promise((resolve) => {
+            img.onload = () => {
+              ctx.fillStyle = "#000";
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              const ratio = Math.min(canvas.width / img.width, canvas.height / img.height);
+              const w = img.width * ratio;
+              const h = img.height * ratio;
+              const x = (canvas.width - w) / 2;
+              const y = (canvas.height - h) / 2;
+              ctx.drawImage(img, x, y, w, h);
+              canvas.toBlob((blob) => {
+                frames.push(blob);
+                resolve();
+              }, "image/jpeg");
+            };
+          });
+        }
+
+        status.textContent = "Encoding video...";
+        for (let i = 0; i < frames.length; i++) {
+          ffmpeg.FS("writeFile", `frame${i.toString().padStart(3, "0")}.jpg`, await fetchFile(frames[i]));
+        }
+
+        ffmpeg.FS("writeFile", "audio.mp3", await fetchFile(audioUrl));
+
+        await ffmpeg.run(
+          "-framerate", "1",
+          "-i", "frame%03d.jpg",
+          "-i", "audio.mp3",
+          "-c:v", "libvpx-vp9",
+          "-c:a", "libopus",
+          "-b:v", "1M",
+          "-shortest",
+          "output.webm"
+        );
+
+        const data = ffmpeg.FS("readFile", "output.webm");
+        const videoBlob = new Blob([data.buffer], { type: "video/webm" });
+        const videoUrl = URL.createObjectURL(videoBlob);
+
+        downloadLink.href = videoUrl;
+        downloadLink.style.display = "inline-block";
+        downloadLink.click();
+        status.textContent = "✅ Video ready!";
+      } catch (err) {
+        console.error("Error:", err);
+        status.textContent = "❌ Something went wrong. Check the console.";
+      } finally {
+        renderBtn.disabled = false;
       }
-
-      return frames;
-    }
-
-    async function generateVideo() {
-      if (!ffmpeg) {
-        status.textContent = "Please wait, FFmpeg is still loading...";
-        return;
-      }
-
-      status.textContent = "Loading FFmpeg...";
-      if (!ffmpeg.isLoaded()) await ffmpeg.load();
-
-      const frames = await drawFrames();
-      status.textContent = "Encoding video...";
-
-      for (let i = 0; i < frames.length; i++) {
-        ffmpeg.FS('writeFile', `frame${i.toString().padStart(3, '0')}.jpg`, await fetchFile(frames[i]));
-      }
-
-      ffmpeg.FS('writeFile', 'audio.mp3', await fetchFile(audioUrl));
-
-      await ffmpeg.run(
-        '-framerate', '1',
-        '-i', 'frame%03d.jpg',
-        '-i', 'audio.mp3',
-        '-c:v', 'libvpx-vp9',
-        '-c:a', 'libopus',
-        '-b:v', '1M',
-        '-shortest',
-        'output.webm'
-      );
-
-      const data = ffmpeg.FS('readFile', 'output.webm');
-      const videoBlob = new Blob([data.buffer], { type: 'video/webm' });
-      const videoUrl = URL.createObjectURL(videoBlob);
-
-      const downloadLink = document.getElementById("downloadLink");
-      downloadLink.href = videoUrl;
-      downloadLink.style.display = "inline-block";
-      downloadLink.click();
-      status.textContent = "✅ Video ready!";
-    }
+    });
   </script>
 </body>
 </html>
