@@ -112,13 +112,15 @@
   </div>
 
   <div id="preview" class="tab-content active">
-    <img id="previewImage" class="slideshow" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Preview Image">
-    <audio id="previewAudio" controls loop>
-      <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
-    </audio>
-    <div class="preview-controls">
-      <button onclick="toggleFullscreen()">Fullscreen</button>
-      <button onclick="downloadAsVideo()">Download Video (WIP)</button>
+    <div id="previewContainer">
+      <img id="previewImage" class="slideshow" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Preview Image">
+      <audio id="previewAudio" controls loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
+      </audio>
+      <div class="preview-controls">
+        <button onclick="toggleFullscreen()">Fullscreen</button>
+        <button onclick="downloadAsVideo()">Download Video (WIP)</button>
+      </div>
     </div>
   </div>
 
@@ -172,9 +174,9 @@
     }
 
     function toggleFullscreen() {
-      const elem = document.documentElement;
+      const container = document.getElementById("previewContainer");
       if (!document.fullscreenElement) {
-        elem.requestFullscreen();
+        container.requestFullscreen();
       } else {
         document.exitFullscreen();
       }
@@ -184,7 +186,7 @@
       alert("Feature coming soon: render slideshow + music as downloadable video.");
     }
 
-    // Initialize preview and image tabs with correct first image
+    // Initialize preview and image tabs
     updateImageDisplays();
   </script>
 </body>
