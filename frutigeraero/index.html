@@ -4,20 +4,19 @@
   <title>Frutiger Aero</title>
   <link rel="icon" href="../indexIcon.ico" type="image/x-icon">
   <style>
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
       font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to bottom, #e1f5fe, #81d4fa);
+      background: linear-gradient(to bottom right, #b3e5fc, #e1f5fe);
       color: #0d47a1;
-      height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding: 20px;
     }
 
     h1 {
-      margin: 20px 0 10px;
+      margin-bottom: 10px;
     }
 
     .tabs {
@@ -45,7 +44,7 @@
     .tab-content {
       display: none;
       width: 100%;
-      max-width: 800px;
+      max-width: 600px;
       text-align: center;
     }
 
@@ -53,46 +52,43 @@
       display: block;
     }
 
-    #previewContainer {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      background: black;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-    }
-
-    #previewContainer img {
+    img.slideshow {
       max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-
-    .preview-controls, .nav-buttons {
-      margin-top: 10px;
-    }
-
-    .preview-controls button, .nav-buttons button {
-      padding: 10px 15px;
-      margin: 5px;
-      background: linear-gradient(180deg, #00bcd4, #00838f);
-      color: white;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
     audio {
       width: 100%;
+      margin-top: 15px;
+    }
+
+    .nav-buttons {
       margin-top: 10px;
     }
 
-    .bottom-gradient {
-      width: 100%;
-      height: 150px;
-      background: linear-gradient(to top, #004d40, transparent);
-      margin-top: 20px;
+    .nav-buttons button {
+      padding: 8px 15px;
+      margin: 5px;
+      border-radius: 20px;
+      background: #00bcd4;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .preview-controls {
+      margin-top: 15px;
+    }
+
+    .preview-controls button {
+      margin: 5px;
+      padding: 10px 15px;
+      background: #00796b;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
     }
 
     a.back {
@@ -107,7 +103,7 @@
   </style>
 </head>
 <body>
-  <h1>Frutiger Aero</h1>
+  <h1>Frutiger Aero Section</h1>
 
   <div class="tabs">
     <button onclick="switchTab('preview')" id="tab-preview" class="active">Preview</button>
@@ -116,9 +112,7 @@
   </div>
 
   <div id="preview" class="tab-content active">
-    <div id="previewContainer">
-      <img id="previewImage" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Preview Image">
-    </div>
+    <img id="previewImage" class="slideshow" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Preview Image">
     <audio id="previewAudio" controls loop>
       <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
     </audio>
@@ -129,7 +123,7 @@
   </div>
 
   <div id="images" class="tab-content">
-    <img id="imageSlide" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Image Slide" style="max-width:100%; border-radius:15px; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
+    <img id="imageSlide" class="slideshow" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Image Slide">
     <div class="nav-buttons">
       <button onclick="prevImage()">Previous</button>
       <button onclick="nextImage()">Next</button>
@@ -141,8 +135,6 @@
       <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
     </audio>
   </div>
-
-  <div class="bottom-gradient"></div>
 
   <a href="../" class="back">← Back to Home</a>
 
@@ -165,9 +157,8 @@
     }
 
     function updateImageDisplays() {
-      const image = imageUrls[currentImageIndex];
-      document.getElementById("imageSlide").src = image;
-      document.getElementById("previewImage").src = image;
+      document.getElementById("imageSlide").src = imageUrls[currentImageIndex];
+      document.getElementById("previewImage").src = imageUrls[currentImageIndex];
     }
 
     function nextImage() {
@@ -181,9 +172,9 @@
     }
 
     function toggleFullscreen() {
-      const container = document.getElementById("previewContainer");
+      const preview = document.getElementById("preview");
       if (!document.fullscreenElement) {
-        container.requestFullscreen();
+        preview.requestFullscreen();
       } else {
         document.exitFullscreen();
       }
