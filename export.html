@@ -39,8 +39,20 @@
   <p id="status"></p>
 
   <script>
-    const { createFFmpeg, fetchFile } = FFmpeg;
-    const ffmpeg = createFFmpeg({ log: true });
+    let ffmpeg;
+    let createFFmpeg, fetchFile;
+
+    // Wait for FFmpeg to be fully available
+    window.addEventListener("DOMContentLoaded", () => {
+      const interval = setInterval(() => {
+        if (window.FFmpeg && window.FFmpeg.createFFmpeg) {
+          ({ createFFmpeg, fetchFile } = FFmpeg);
+          ffmpeg = createFFmpeg({ log: true });
+          clearInterval(interval);
+          document.getElementById("status").textContent = "FFmpeg is ready!";
+        }
+      }, 200);
+    });
 
     const imageUrls = [
       "../assets/images/Vibes.jpeg",
@@ -49,14 +61,13 @@
       "../assets/images/Gallery.jpeg",
       "../assets/images/Frutiger Eco.jpeg"
     ];
-    const audioUrl = "../assets/music/Frutiger.mp3";
+    const audioUrl = "../assets/music/Mii Editor - Nintendo.mp3";
     const canvas = document.getElementById("previewCanvas");
     const ctx = canvas.getContext("2d");
     const status = document.getElementById("status");
 
     async function drawFrames() {
       const duration = 5; // seconds per image
-      const fps = 1; // 1 frame per second
       const totalFrames = imageUrls.length * duration;
       const frames = [];
 
@@ -87,11 +98,16 @@
     }
 
     async function generateVideo() {
-      status.textContent = "Preparing FFmpeg...";
+      if (!ffmpeg) {
+        status.textContent = "Please wait, FFmpeg is still loading...";
+        return;
+      }
+
+      status.textContent = "Loading FFmpeg...";
       if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
       const frames = await drawFrames();
-      status.textContent = "Encoding frames...";
+      status.textContent = "Encoding video...";
 
       for (let i = 0; i < frames.length; i++) {
         ffmpeg.FS('writeFile', `frame${i.toString().padStart(3, '0')}.jpg`, await fetchFile(frames[i]));
@@ -118,7 +134,7 @@
       downloadLink.href = videoUrl;
       downloadLink.style.display = "inline-block";
       downloadLink.click();
-      status.textContent = "Video is ready!";
+      status.textContent = "✅ Video ready!";
     }
   </script>
 </body>
