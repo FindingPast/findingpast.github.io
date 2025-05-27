@@ -38,7 +38,13 @@
   <p id="status"></p>
 
   <script type="module">
-    import { createFFmpeg, fetchFile } from "./ffmpeg/ffmpeg.min.mjs";
+    import { createFFmpeg } from "./ffmpeg/ffmpeg.min.mjs";
+
+    // Polyfill for fetchFile since your FFmpeg build doesn't export it
+    const fetchFile = async (input) => {
+      const buf = await input.arrayBuffer();
+      return new Uint8Array(buf);
+    };
 
     const ffmpeg = createFFmpeg({
       corePath: "./ffmpeg/ffmpeg-core.js",
@@ -98,7 +104,7 @@
           ffmpeg.FS("writeFile", `frame${i.toString().padStart(3, "0")}.jpg`, await fetchFile(frames[i]));
         }
 
-        ffmpeg.FS("writeFile", "audio.mp3", await fetchFile(audioUrl));
+        ffmpeg.FS("writeFile", "audio.mp3", await fetchFile(await fetch(audioUrl).then(r => r.blob())));
 
         await ffmpeg.run(
           "-framerate", "1",
