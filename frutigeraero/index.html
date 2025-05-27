@@ -72,10 +72,6 @@
       background: black;
     }
 
-    #previewAudio {
-      display: none;
-    }
-
     .preview-controls {
       margin-top: 15px;
     }
@@ -118,6 +114,11 @@
       width: 80%;
     }
 
+    audio {
+      margin: 10px 0;
+      width: 100%;
+    }
+
     a.back {
       margin-top: 30px;
       display: inline-block;
@@ -142,8 +143,8 @@
     <div id="previewContainer">
       <img id="previewSlide" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Preview Slideshow">
     </div>
-    <audio id="previewAudio" autoplay loop>
-      <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
+    <audio id="previewAudio" loop>
+      <source src="../assets/music/Mii Editor - Nintendo.mp3" type="audio/mp3">
     </audio>
     <div class="preview-controls">
       <button onclick="toggleFullscreen()">Fullscreen</button>
@@ -165,8 +166,14 @@
   </div>
 
   <div id="music" class="tab-content">
-    <audio id="musicPlayer" controls loop>
-      <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
+    <audio controls loop>
+      <source src="../assets/music/Mii Editor - Nintendo.mp3" type="audio/mp3">
+    </audio>
+    <audio controls loop>
+      <source src="../assets/music/takeshi abo - LEASE.mp3" type="audio/mp3">
+    </audio>
+    <audio controls loop>
+      <source src="../assets/music/yume 2kki - lotus waters.mp3" type="audio/mp3">
     </audio>
   </div>
 
@@ -180,18 +187,29 @@
       "https://i.ibb.co/yWctL4m/example3.jpg"
     ];
     let currentImageIndex = 0;
-    let intervalTime = 5000; // Default 5 seconds
+    let intervalTime = 5000;
     let slideshowInterval;
 
     function switchTab(tab) {
       tabs.forEach(t => {
         document.getElementById(t).classList.remove('active');
+        document.getElementById('tab-' + t).classList.remove('active');
       });
       document.getElementById(tab).classList.add('active');
+      document.getElementById('tab-' + tab).classList.add('active');
+
+      const audio = document.getElementById("previewAudio");
+      if (tab === "preview") {
+        audio.play();
+      } else {
+        audio.pause();
+      }
     }
 
-    function updateImageDisplays() {
-      document.getElementById("imageSlide").src = imageUrls[currentImageIndex];
+    function updateAllDisplays() {
+      const current = imageUrls[currentImageIndex];
+      document.getElementById("imageSlide").src = current;
+      document.getElementById("previewSlide").src = current;
     }
 
     function nextImage() {
@@ -202,11 +220,6 @@
     function prevImage() {
       currentImageIndex = (currentImageIndex - 1 + imageUrls.length) % imageUrls.length;
       updateAllDisplays();
-    }
-
-    function updateAllDisplays() {
-      document.getElementById("imageSlide").src = imageUrls[currentImageIndex];
-      document.getElementById("previewSlide").src = imageUrls[currentImageIndex];
     }
 
     function toggleFullscreen() {
@@ -236,7 +249,7 @@
       }, intervalTime);
     }
 
-    // Initial startup
+    // Initial setup
     updateAllDisplays();
     startSlideshow();
   </script>
