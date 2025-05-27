@@ -55,35 +55,49 @@
       display: block;
     }
 
-    #previewContainer {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: auto;
-    }
-
-    #previewContainer:fullscreen {
+    #fullscreenOverlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
       background: black;
-      width: 100vw;
-      height: 100vh;
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
     }
 
-    #previewImage {
-      max-width: 100%;
-      max-height: 70vh;
-      border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    #fullscreenOverlay.active {
+      display: flex;
     }
 
-    #previewContainer:fullscreen #previewImage {
+    .video-box {
+      aspect-ratio: 16 / 9;
+      background: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 90vw;
       max-height: 80vh;
     }
 
-    audio {
-      width: 100%;
+    .video-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .fullscreen-controls {
       margin-top: 15px;
+    }
+
+    .fullscreen-controls button {
+      margin: 5px;
+      padding: 10px 15px;
+      background: #00796b;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
     }
 
     .nav-buttons {
@@ -97,20 +111,6 @@
       background: #00bcd4;
       color: white;
       border: none;
-      cursor: pointer;
-    }
-
-    .preview-controls {
-      margin-top: 15px;
-    }
-
-    .preview-controls button {
-      margin: 5px;
-      padding: 10px 15px;
-      background: #00796b;
-      color: white;
-      border: none;
-      border-radius: 20px;
       cursor: pointer;
     }
 
@@ -135,15 +135,13 @@
   </div>
 
   <div id="preview" class="tab-content active">
-    <div id="previewContainer">
-      <img id="previewImage" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Preview Image">
-      <audio id="previewAudio" controls loop>
-        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
-      </audio>
-      <div class="preview-controls">
-        <button onclick="toggleFullscreen()">Fullscreen</button>
-        <button onclick="downloadAsVideo()">Download Video (WIP)</button>
-      </div>
+    <img id="previewImage" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Preview Image">
+    <audio id="previewAudio" controls loop>
+      <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
+    </audio>
+    <div class="nav-buttons">
+      <button onclick="toggleFullscreenOverlay()">Fullscreen</button>
+      <button onclick="downloadAsVideo()">Download Video (WIP)</button>
     </div>
   </div>
 
@@ -159,6 +157,16 @@
     <audio id="musicPlayer" controls loop>
       <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
     </audio>
+  </div>
+
+  <div id="fullscreenOverlay">
+    <div class="video-box">
+      <img id="fullscreenImage" src="" alt="Fullscreen Preview">
+    </div>
+    <audio id="fullscreenAudio" controls loop></audio>
+    <div class="fullscreen-controls">
+      <button onclick="closeFullscreenOverlay()">Exit Fullscreen</button>
+    </div>
   </div>
 
   <a href="../" class="back">← Back to Home</a>
@@ -182,8 +190,10 @@
     }
 
     function updateImageDisplays() {
-      document.getElementById("imageSlide").src = imageUrls[currentImageIndex];
-      document.getElementById("previewImage").src = imageUrls[currentImageIndex];
+      const image = imageUrls[currentImageIndex];
+      document.getElementById("imageSlide").src = image;
+      document.getElementById("previewImage").src = image;
+      document.getElementById("fullscreenImage").src = image;
     }
 
     function nextImage() {
@@ -196,13 +206,15 @@
       updateImageDisplays();
     }
 
-    function toggleFullscreen() {
-      const container = document.getElementById("previewContainer");
-      if (!document.fullscreenElement) {
-        container.requestFullscreen();
-      } else {
-        document.exitFullscreen();
-      }
+    function toggleFullscreenOverlay() {
+      document.getElementById('fullscreenOverlay').classList.add('active');
+      document.getElementById('fullscreenAudio').src = document.getElementById('previewAudio').querySelector('source').src;
+      document.getElementById('fullscreenAudio').play();
+    }
+
+    function closeFullscreenOverlay() {
+      document.getElementById('fullscreenOverlay').classList.remove('active');
+      document.getElementById('fullscreenAudio').pause();
     }
 
     function downloadAsVideo() {
