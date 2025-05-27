@@ -8,24 +8,22 @@
       margin: 0;
       padding: 0;
       font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to bottom right, #b3e5fc, #e1f5fe);
+      background: linear-gradient(to bottom, #e1f5fe, #81d4fa);
       color: #0d47a1;
+      height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px;
-      height: 100%;
     }
 
     h1 {
-      margin-bottom: 10px;
+      margin: 20px 0 10px;
     }
 
     .tabs {
       display: flex;
       gap: 10px;
       margin-bottom: 20px;
-      flex-wrap: wrap;
     }
 
     .tabs button {
@@ -55,63 +53,46 @@
       display: block;
     }
 
-    #fullscreenOverlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: black;
-      z-index: 9999;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
-
-    #fullscreenOverlay.active {
-      display: flex;
-    }
-
-    .video-box {
+    #previewContainer {
+      width: 100%;
       aspect-ratio: 16 / 9;
       background: black;
       display: flex;
       justify-content: center;
       align-items: center;
-      width: 90vw;
-      max-height: 80vh;
+      position: relative;
     }
 
-    .video-box img {
+    #previewContainer img {
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
     }
 
-    .fullscreen-controls {
-      margin-top: 15px;
-    }
-
-    .fullscreen-controls button {
-      margin: 5px;
-      padding: 10px 15px;
-      background: #00796b;
-      color: white;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-    }
-
-    .nav-buttons {
+    .preview-controls, .nav-buttons {
       margin-top: 10px;
     }
 
-    .nav-buttons button {
-      padding: 8px 15px;
+    .preview-controls button, .nav-buttons button {
+      padding: 10px 15px;
       margin: 5px;
-      border-radius: 20px;
-      background: #00bcd4;
+      background: linear-gradient(180deg, #00bcd4, #00838f);
       color: white;
       border: none;
+      border-radius: 20px;
       cursor: pointer;
+    }
+
+    audio {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .bottom-gradient {
+      width: 100%;
+      height: 150px;
+      background: linear-gradient(to top, #004d40, transparent);
+      margin-top: 20px;
     }
 
     a.back {
@@ -135,18 +116,20 @@
   </div>
 
   <div id="preview" class="tab-content active">
-    <img id="previewImage" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Preview Image">
+    <div id="previewContainer">
+      <img id="previewImage" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Preview Image">
+    </div>
     <audio id="previewAudio" controls loop>
       <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
     </audio>
-    <div class="nav-buttons">
-      <button onclick="toggleFullscreenOverlay()">Fullscreen</button>
+    <div class="preview-controls">
+      <button onclick="toggleFullscreen()">Fullscreen</button>
       <button onclick="downloadAsVideo()">Download Video (WIP)</button>
     </div>
   </div>
 
   <div id="images" class="tab-content">
-    <img id="imageSlide" class="slideshow" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Image Slide">
+    <img id="imageSlide" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Image Slide" style="max-width:100%; border-radius:15px; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
     <div class="nav-buttons">
       <button onclick="prevImage()">Previous</button>
       <button onclick="nextImage()">Next</button>
@@ -159,15 +142,7 @@
     </audio>
   </div>
 
-  <div id="fullscreenOverlay">
-    <div class="video-box">
-      <img id="fullscreenImage" src="" alt="Fullscreen Preview">
-    </div>
-    <audio id="fullscreenAudio" controls loop></audio>
-    <div class="fullscreen-controls">
-      <button onclick="closeFullscreenOverlay()">Exit Fullscreen</button>
-    </div>
-  </div>
+  <div class="bottom-gradient"></div>
 
   <a href="../" class="back">← Back to Home</a>
 
@@ -193,7 +168,6 @@
       const image = imageUrls[currentImageIndex];
       document.getElementById("imageSlide").src = image;
       document.getElementById("previewImage").src = image;
-      document.getElementById("fullscreenImage").src = image;
     }
 
     function nextImage() {
@@ -206,15 +180,13 @@
       updateImageDisplays();
     }
 
-    function toggleFullscreenOverlay() {
-      document.getElementById('fullscreenOverlay').classList.add('active');
-      document.getElementById('fullscreenAudio').src = document.getElementById('previewAudio').querySelector('source').src;
-      document.getElementById('fullscreenAudio').play();
-    }
-
-    function closeFullscreenOverlay() {
-      document.getElementById('fullscreenOverlay').classList.remove('active');
-      document.getElementById('fullscreenAudio').pause();
+    function toggleFullscreen() {
+      const container = document.getElementById("previewContainer");
+      if (!document.fullscreenElement) {
+        container.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
     }
 
     function downloadAsVideo() {
