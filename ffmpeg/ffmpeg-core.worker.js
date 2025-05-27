@@ -1,0 +1,1 @@
+// Placeholder for ffmpeg-core.worker.js
