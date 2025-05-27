@@ -2,10 +2,190 @@
 <html>
 <head>
   <title>Frutiger Aero</title>
+  <link rel="icon" href="../indexIcon.ico" type="image/x-icon">
+  <style>
+    body {
+      margin: 0;
+      font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to bottom right, #b3e5fc, #e1f5fe);
+      color: #0d47a1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .tabs button {
+      padding: 10px 20px;
+      background: linear-gradient(180deg, #00e5ff, #009688);
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .tabs button.active {
+      background: linear-gradient(180deg, #ffffff, #b2ebf2);
+      color: #00796b;
+    }
+
+    .tab-content {
+      display: none;
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    img.slideshow {
+      max-width: 100%;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    audio {
+      width: 100%;
+      margin-top: 15px;
+    }
+
+    .nav-buttons {
+      margin-top: 10px;
+    }
+
+    .nav-buttons button {
+      padding: 8px 15px;
+      margin: 5px;
+      border-radius: 20px;
+      background: #00bcd4;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .preview-controls {
+      margin-top: 15px;
+    }
+
+    .preview-controls button {
+      margin: 5px;
+      padding: 10px 15px;
+      background: #00796b;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    a.back {
+      margin-top: 30px;
+      display: inline-block;
+      text-decoration: none;
+      background: #009688;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Frutiger Aero Section</h1>
-  <p>This will eventually have image + music tabs.</p>
-  <a href="../">← Back to Home</a>
+  <h1>Frutiger Aero</h1>
+
+  <div class="tabs">
+    <button onclick="switchTab('preview')" id="tab-preview" class="active">Preview</button>
+    <button onclick="switchTab('images')" id="tab-images">Images</button>
+    <button onclick="switchTab('music')" id="tab-music">Music</button>
+  </div>
+
+  <div id="preview" class="tab-content active">
+    <img id="previewImage" class="slideshow" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Preview Image">
+    <audio id="previewAudio" controls loop>
+      <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
+    </audio>
+    <div class="preview-controls">
+      <button onclick="toggleFullscreen()">Fullscreen</button>
+      <button onclick="downloadAsVideo()">Download Video (WIP)</button>
+    </div>
+  </div>
+
+  <div id="images" class="tab-content">
+    <img id="imageSlide" class="slideshow" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Image Slide">
+    <div class="nav-buttons">
+      <button onclick="prevImage()">Previous</button>
+      <button onclick="nextImage()">Next</button>
+    </div>
+  </div>
+
+  <div id="music" class="tab-content">
+    <audio id="musicPlayer" controls loop>
+      <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
+    </audio>
+  </div>
+
+  <a href="../" class="back">← Back to Home</a>
+
+  <script>
+    const tabs = ['preview', 'images', 'music'];
+    const imageUrls = [
+      "https://i.ibb.co/6ZBpsXx/example1.jpg",
+      "https://i.ibb.co/0qJfB3n/example2.jpg",
+      "https://i.ibb.co/yWctL4m/example3.jpg"
+    ];
+    let currentImageIndex = 0;
+
+    function switchTab(tab) {
+      tabs.forEach(t => {
+        document.getElementById(t).classList.remove('active');
+        document.getElementById(`tab-${t}`).classList.remove('active');
+      });
+      document.getElementById(tab).classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+    }
+
+    function updateImageDisplays() {
+      document.getElementById("imageSlide").src = imageUrls[currentImageIndex];
+      document.getElementById("previewImage").src = imageUrls[currentImageIndex];
+    }
+
+    function nextImage() {
+      currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+      updateImageDisplays();
+    }
+
+    function prevImage() {
+      currentImageIndex = (currentImageIndex - 1 + imageUrls.length) % imageUrls.length;
+      updateImageDisplays();
+    }
+
+    function toggleFullscreen() {
+      const elem = document.documentElement;
+      if (!document.fullscreenElement) {
+        elem.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    function downloadAsVideo() {
+      alert("Feature coming soon: render slideshow + music as downloadable video.");
+    }
+
+    // Initialize preview and image tabs with correct first image
+    updateImageDisplays();
+  </script>
 </body>
 </html>
