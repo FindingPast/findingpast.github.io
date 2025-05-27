@@ -52,29 +52,21 @@
       display: block;
     }
 
-    img.slideshow {
+    .preview-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .preview-inner img {
       max-width: 100%;
       border-radius: 15px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
-    audio {
+    .preview-inner audio {
       width: 100%;
       margin-top: 15px;
-    }
-
-    .nav-buttons {
-      margin-top: 10px;
-    }
-
-    .nav-buttons button {
-      padding: 8px 15px;
-      margin: 5px;
-      border-radius: 20px;
-      background: #00bcd4;
-      color: white;
-      border: none;
-      cursor: pointer;
     }
 
     .preview-controls {
@@ -91,6 +83,20 @@
       cursor: pointer;
     }
 
+    .nav-buttons {
+      margin-top: 10px;
+    }
+
+    .nav-buttons button {
+      padding: 8px 15px;
+      margin: 5px;
+      border-radius: 20px;
+      background: #00bcd4;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
     a.back {
       margin-top: 30px;
       display: inline-block;
@@ -100,10 +106,24 @@
       padding: 10px 20px;
       border-radius: 20px;
     }
+
+    #previewContainer:fullscreen {
+      background: black;
+      justify-content: center;
+    }
+
+    #previewContainer:fullscreen img {
+      max-height: 70vh;
+      object-fit: contain;
+    }
+
+    #previewContainer:fullscreen audio {
+      width: 80%;
+    }
   </style>
 </head>
 <body>
-  <h1>Frutiger Aero Section</h1>
+  <h1>Frutiger Aero</h1>
 
   <div class="tabs">
     <button onclick="switchTab('preview')" id="tab-preview" class="active">Preview</button>
@@ -112,13 +132,15 @@
   </div>
 
   <div id="preview" class="tab-content active">
-    <img id="previewImage" class="slideshow" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Preview Image">
-    <audio id="previewAudio" controls loop>
-      <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
-    </audio>
-    <div class="preview-controls">
-      <button onclick="toggleFullscreen()">Fullscreen</button>
-      <button onclick="downloadAsVideo()">Download Video (WIP)</button>
+    <div id="previewContainer" class="preview-inner">
+      <img id="previewImage" src="https://i.ibb.co/6ZBpsXx/example1.jpg" alt="Preview Image">
+      <audio id="previewAudio" controls loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
+      </audio>
+      <div class="preview-controls">
+        <button onclick="toggleFullscreen()">Fullscreen</button>
+        <button onclick="downloadAsVideo()">Download Video (WIP)</button>
+      </div>
     </div>
   </div>
 
@@ -150,15 +172,16 @@
     function switchTab(tab) {
       tabs.forEach(t => {
         document.getElementById(t).classList.remove('active');
-        document.getElementById(`tab-${t}`).classList.remove('active');
+        document.getElementById(`tab-${t}`)?.classList.remove('active');
       });
       document.getElementById(tab).classList.add('active');
-      document.getElementById(`tab-${tab}`).classList.add('active');
+      document.getElementById(`tab-${tab}`)?.classList.add('active');
     }
 
     function updateImageDisplays() {
-      document.getElementById("imageSlide").src = imageUrls[currentImageIndex];
-      document.getElementById("previewImage").src = imageUrls[currentImageIndex];
+      const current = imageUrls[currentImageIndex];
+      document.getElementById("imageSlide").src = current;
+      document.getElementById("previewImage").src = current;
     }
 
     function nextImage() {
@@ -172,9 +195,9 @@
     }
 
     function toggleFullscreen() {
-      const preview = document.getElementById("preview");
+      const container = document.getElementById("previewContainer");
       if (!document.fullscreenElement) {
-        preview.requestFullscreen();
+        container.requestFullscreen();
       } else {
         document.exitFullscreen();
       }
