@@ -37,38 +37,32 @@
   <video id="outputVideo" controls style="display:none;"></video>
 
   <script type="module">
-    import ffmpegModule from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.2/+esm';
+    import { createFFmpeg, fetchFile } from 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.2/dist/esm/index.js';
 
-    const { createFFmpeg } = ffmpegModule;
     const ffmpeg = createFFmpeg({
       log: true,
-      corePath: 'https://drive.google.com/uc?export=download&id=1y4OQNs7g7l-wcUreyJZVa_hnPmZAEwbI',
+      corePath: 'https://drive.google.com/uc?export=download&id=1y4OQNs7g7l-wcUreyJZVa_hnPmZAEwbI'
     });
 
     const images = [
-      "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/images/Vibes.jpg",
-      "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/images/Open.jpg",
-      "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/images/Life.jpg"
+      "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/images/Vibes.jpeg",
+      "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/images/Open.jpeg",
+      "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/images/Life.jpeg"
     ];
-    const audioUrl = "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/music/Music.mp3";
+    const audioUrl = "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/music/yume%202kki%20-%20lotus%20waters.mp3";
 
-    async function generateVideo() {
-      const { fetchFile } = ffmpegModule;
-
+    window.generateVideo = async function () {
       if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
-      // Write audio
       const audioData = await fetchFile(audioUrl);
       ffmpeg.FS('writeFile', 'music.mp3', audioData);
 
-      // Write image sequence
       for (let i = 0; i < images.length; i++) {
         const imgData = await fetchFile(images[i]);
         const paddedIndex = String(i + 1).padStart(3, '0');
         ffmpeg.FS('writeFile', `img${paddedIndex}.jpg`, imgData);
       }
 
-      // Run ffmpeg to create video
       await ffmpeg.run(
         '-framerate', '1/5',
         '-i', 'img%03d.jpg',
@@ -84,7 +78,7 @@
       const video = document.getElementById('outputVideo');
       video.src = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
       video.style.display = 'block';
-    }
+    };
   </script>
 </body>
 </html>
