@@ -1,137 +1,89 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Frutiger Aero - Video Export</title>
+  <title>Export Preview</title>
   <style>
     body {
-      font-family: Segoe UI, sans-serif;
-      background: linear-gradient(to bottom right, #b3e5fc, #e1f5fe);
-      color: #0d47a1;
-      text-align: center;
-      padding: 2em;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #e1f5fe;
+      color: #004d40;
     }
-    #previewCanvas {
-      display: none;
+    h1 {
+      color: #00796b;
     }
     button {
       padding: 10px 20px;
-      font-size: 1rem;
-      border: none;
-      background: #00796b;
+      background-color: #009688;
       color: white;
+      border: none;
       border-radius: 20px;
       cursor: pointer;
-      margin: 1em;
+      margin-top: 10px;
     }
-    #downloadLink {
-      display: none;
+    video {
+      width: 100%;
+      max-width: 720px;
       margin-top: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
   </style>
 </head>
 <body>
-  <h1>Frutiger Aero Video Export</h1>
-  <p>This will render a video of your slideshow with music and let you download it!</p>
-  <canvas id="previewCanvas" width="1280" height="720"></canvas>
-  <button id="renderBtn">Download Video</button>
-  <a id="downloadLink" href="#" download="frutiger_aero_preview.webm">Click here if download doesn't start</a>
-  <p id="status"></p>
+  <h1>Export Video Preview</h1>
+  <p>Click the button below to generate a video preview using your images and music.</p>
+  <button onclick="generateVideo()">Download Video</button>
+  <video id="outputVideo" controls style="display:none;"></video>
 
   <script type="module">
-    import { createFFmpeg } from "./ffmpeg/ffmpeg.min.mjs";
-
-    // Polyfill for fetchFile since your FFmpeg build doesn't export it
-    const fetchFile = async (input) => {
-      const buf = await input.arrayBuffer();
-      return new Uint8Array(buf);
-    };
+    import { createFFmpeg, fetchFile } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.2/+esm';
 
     const ffmpeg = createFFmpeg({
-      corePath: "./ffmpeg/ffmpeg-core.js",
-      log: true
+      log: true,
+      corePath: 'https://drive.google.com/uc?export=download&id=1y4OQNs7g7l-wcUreyJZVa_hnPmZAEwbI',
+      coreURL: 'https://drive.google.com/uc?export=download&id=1zUnYZa7yhNlJYTsCM8r0YxdMR_eyeTGY',
+      workerURL: 'https://drive.google.com/uc?export=download&id=1R9AEcbsxSJrL1iI-pEL8DkQ6JQj8gpGM'
     });
 
-    const imageUrls = [
-      "./assets/images/Vibes.jpeg",
-      "./assets/images/Open.jpeg",
-      "./assets/images/Life.jpeg",
-      "./assets/images/Gallery.jpeg",
-      "./assets/images/Frutiger Eco.jpeg"
+    const images = [
+      "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/images/Vibes.jpg",
+      "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/images/Open.jpg",
+      "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/images/Life.jpg"
     ];
+    const audioUrl = "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/music/Music.mp3";
 
-    const audioUrl = "./assets/music/Mii Editor - Nintendo.mp3";
-    const canvas = document.getElementById("previewCanvas");
-    const ctx = canvas.getContext("2d");
-    const status = document.getElementById("status");
-    const renderBtn = document.getElementById("renderBtn");
-    const downloadLink = document.getElementById("downloadLink");
+    async function generateVideo() {
+      if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
-    renderBtn.addEventListener("click", async () => {
-      try {
-        renderBtn.disabled = true;
-        status.textContent = "Loading FFmpeg...";
-        if (!ffmpeg.isLoaded()) await ffmpeg.load();
+      // Write audio
+      const audioData = await fetchFile(audioUrl);
+      ffmpeg.FS('writeFile', 'music.mp3', audioData);
 
-        const duration = 5; // seconds per image
-        const totalFrames = imageUrls.length * duration;
-        const frames = [];
-
-        for (let i = 0; i < totalFrames; i++) {
-          const imgIndex = Math.floor(i / duration);
-          const img = new Image();
-          img.crossOrigin = "anonymous";
-          img.src = imageUrls[imgIndex];
-          await new Promise((resolve) => {
-            img.onload = () => {
-              ctx.fillStyle = "#000";
-              ctx.fillRect(0, 0, canvas.width, canvas.height);
-              const ratio = Math.min(canvas.width / img.width, canvas.height / img.height);
-              const w = img.width * ratio;
-              const h = img.height * ratio;
-              const x = (canvas.width - w) / 2;
-              const y = (canvas.height - h) / 2;
-              ctx.drawImage(img, x, y, w, h);
-              canvas.toBlob((blob) => {
-                frames.push(blob);
-                resolve();
-              }, "image/jpeg");
-            };
-          });
-        }
-
-        status.textContent = "Encoding video...";
-        for (let i = 0; i < frames.length; i++) {
-          ffmpeg.FS("writeFile", `frame${i.toString().padStart(3, "0")}.jpg`, await fetchFile(frames[i]));
-        }
-
-        ffmpeg.FS("writeFile", "audio.mp3", await fetchFile(await fetch(audioUrl).then(r => r.blob())));
-
-        await ffmpeg.run(
-          "-framerate", "1",
-          "-i", "frame%03d.jpg",
-          "-i", "audio.mp3",
-          "-c:v", "libvpx-vp9",
-          "-c:a", "libopus",
-          "-b:v", "1M",
-          "-shortest",
-          "output.webm"
-        );
-
-        const data = ffmpeg.FS("readFile", "output.webm");
-        const videoBlob = new Blob([data.buffer], { type: "video/webm" });
-        const videoUrl = URL.createObjectURL(videoBlob);
-
-        downloadLink.href = videoUrl;
-        downloadLink.style.display = "inline-block";
-        downloadLink.click();
-        status.textContent = "✅ Video ready!";
-      } catch (err) {
-        console.error("Error:", err);
-        status.textContent = "❌ Something went wrong. Check the console.";
-      } finally {
-        renderBtn.disabled = false;
+      // Write image sequence
+      for (let i = 0; i < images.length; i++) {
+        const imgData = await fetchFile(images[i]);
+        const paddedIndex = String(i + 1).padStart(3, '0');
+        ffmpeg.FS('writeFile', `img${paddedIndex}.jpg`, imgData);
       }
-    });
+
+      // Run ffmpeg to create video
+      await ffmpeg.run(
+        '-framerate', '1/5',
+        '-i', 'img%03d.jpg',
+        '-i', 'music.mp3',
+        '-c:v', 'libx264',
+        '-r', '30',
+        '-pix_fmt', 'yuv420p',
+        '-shortest',
+        'output.mp4'
+      );
+
+      const data = ffmpeg.FS('readFile', 'output.mp4');
+      const video = document.getElementById('outputVideo');
+      video.src = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+      video.style.display = 'block';
+    }
   </script>
 </body>
 </html>
