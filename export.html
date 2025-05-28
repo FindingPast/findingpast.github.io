@@ -37,13 +37,12 @@
   <video id="outputVideo" controls style="display:none;"></video>
 
   <script type="module">
-    import { createFFmpeg, fetchFile } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.2/+esm';
+    import ffmpegModule from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.2/+esm';
 
+    const { createFFmpeg } = ffmpegModule;
     const ffmpeg = createFFmpeg({
       log: true,
       corePath: 'https://drive.google.com/uc?export=download&id=1y4OQNs7g7l-wcUreyJZVa_hnPmZAEwbI',
-      coreURL: 'https://drive.google.com/uc?export=download&id=1zUnYZa7yhNlJYTsCM8r0YxdMR_eyeTGY',
-      workerURL: 'https://drive.google.com/uc?export=download&id=1R9AEcbsxSJrL1iI-pEL8DkQ6JQj8gpGM'
     });
 
     const images = [
@@ -54,6 +53,8 @@
     const audioUrl = "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/music/Music.mp3";
 
     async function generateVideo() {
+      const { fetchFile } = ffmpegModule;
+
       if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
       // Write audio
