@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Export Preview</title>
+  <title>Export Video Preview</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
       background: #e1f5fe;
+      padding: 20px;
       color: #004d40;
     }
     h1 {
@@ -19,14 +19,12 @@
       border: none;
       border-radius: 20px;
       cursor: pointer;
-      margin-top: 10px;
     }
     video {
-      width: 100%;
-      max-width: 720px;
+      display: block;
       margin-top: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      max-width: 720px;
+      width: 100%;
     }
   </style>
 </head>
@@ -36,31 +34,33 @@
   <button onclick="generateVideo()">Download Video</button>
   <video id="outputVideo" controls style="display:none;"></video>
 
-  <script type="module">
-    import { createFFmpeg, fetchFile } from 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.2/dist/esm/index.js';
+  <!-- ✅ Import known working ffmpeg.wasm build -->
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.10.1/dist/ffmpeg.min.js"></script>
 
+  <script>
+    const { createFFmpeg, fetchFile } = FFmpeg;
     const ffmpeg = createFFmpeg({
       log: true,
-      corePath: 'https://drive.google.com/uc?export=download&id=1y4OQNs7g7l-wcUreyJZVa_hnPmZAEwbI'
+      corePath: 'https://rawcdn.githack.com/ffmpegwasm/ffmpeg.wasm-core/0.10.0/dist/ffmpeg-core.js'
     });
 
-    const images = [
+    const imageUrls = [
       "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/images/Vibes.jpeg",
       "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/images/Open.jpeg",
       "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/images/Life.jpeg"
     ];
     const audioUrl = "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/music/yume%202kki%20-%20lotus%20waters.mp3";
 
-    window.generateVideo = async function () {
+    async function generateVideo() {
       if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
       const audioData = await fetchFile(audioUrl);
       ffmpeg.FS('writeFile', 'music.mp3', audioData);
 
-      for (let i = 0; i < images.length; i++) {
-        const imgData = await fetchFile(images[i]);
-        const paddedIndex = String(i + 1).padStart(3, '0');
-        ffmpeg.FS('writeFile', `img${paddedIndex}.jpg`, imgData);
+      for (let i = 0; i < imageUrls.length; i++) {
+        const imgData = await fetchFile(imageUrls[i]);
+        const padded = String(i + 1).padStart(3, '0');
+        ffmpeg.FS('writeFile', `img${padded}.jpg`, imgData);
       }
 
       await ffmpeg.run(
@@ -78,7 +78,10 @@
       const video = document.getElementById('outputVideo');
       video.src = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
       video.style.display = 'block';
-    };
+    }
+
+    // Make function globally accessible
+    window.generateVideo = generateVideo;
   </script>
 </body>
 </html>
