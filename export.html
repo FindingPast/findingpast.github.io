@@ -42,7 +42,7 @@
   <video id="preview" controls></video>
 
   <script type="module">
-    import { createFFmpeg, fetchFile } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js';
+    import { createFFmpeg, fetchFile } from 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js';
 
     const ffmpeg = createFFmpeg({
       log: true,
@@ -59,7 +59,7 @@
 
       await ffmpeg.load();
 
-      // Example content: replace with your actual files!
+      // Replace these with actual assets you have:
       const image1 = await fetchFile('assets/img1.jpg');
       const image2 = await fetchFile('assets/img2.jpg');
       const audio = await fetchFile('assets/music.mp3');
