@@ -1,94 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Export Video Preview</title>
   <style>
     body {
-      background: #d0f0ff;
       font-family: Arial, sans-serif;
-      padding: 30px;
+      background: #cceeff;
       text-align: center;
+      padding: 2rem;
     }
-
-    h1 {
-      color: #006064;
-    }
-
-    button {
-      padding: 10px 20px;
-      background: #009688;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: bold;
+    #videoPreview {
+      display: none;
       margin-top: 20px;
-    }
-
-    video {
-      margin-top: 30px;
       max-width: 90%;
-      aspect-ratio: 16 / 9;
-      border-radius: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>Export Video Preview</h1>
+  <h2>Export Video Preview</h2>
   <p>Click the button below to generate a video preview using your images and music.</p>
-  <button onclick="generateVideo()">Download Video</button>
-  <br>
-  <video id="outputVideo" controls></video>
+  <button onclick="generateVideo()">🎬 Download Video</button>
+  <video id="videoPreview" controls></video>
 
   <script type="module">
-    import { createFFmpeg, fetchFile } from 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.mjs';
+    import { createFFmpeg, fetchFile } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.4/dist/esm/index.js';
 
     const ffmpeg = createFFmpeg({ log: true });
-    const imageUrls = [
-      'https://drive.google.com/uc?export=download&id=1R9AEcbsxSJrL1iI-pEL8DkQ6JQj8gpGM',
+
+    const images = [
+      'https://drive.google.com/uc?export=download&id=1y4OQNs7g7l-wcUreyJZVa_hnPmZAEwbI',
       'https://drive.google.com/uc?export=download&id=1zUnYZa7yhNlJYTsCM8r0YxdMR_eyeTGY',
-      'https://drive.google.com/uc?export=download&id=1y4OQNs7g7l-wcUreyJZVa_hnPmZAEwbI'
+      'https://drive.google.com/uc?export=download&id=1R9AEcbsxSJrL1iI-pEL8DkQ6JQj8gpGM'
     ];
-    const musicUrl = 'https://drive.google.com/uc?export=download&id=1zUnYZa7yhNlJYTsCM8r0YxdMR_eyeTGY';
+    const music = 'https://drive.google.com/uc?export=download&id=1y4OQNs7g7l-wcUreyJZVa_hnPmZAEwbI'; // Example: can switch to another
 
-    window.generateVideo = async () => {
-      const button = document.querySelector("button");
-      button.disabled = true;
-      button.innerText = "Generating...";
+    async function generateVideo() {
+      const videoElement = document.getElementById('videoPreview');
 
-      if (!ffmpeg.isLoaded()) await ffmpeg.load();
-
-      // Download and write images
-      for (let i = 0; i < imageUrls.length; i++) {
-        const img = await fetchFile(imageUrls[i]);
-        ffmpeg.FS('writeFile', `img${i}.jpg`, img);
+      if (!ffmpeg.isLoaded()) {
+        await ffmpeg.load();
       }
 
-      // Download and write music
-      const music = await fetchFile(musicUrl);
-      ffmpeg.FS('writeFile', 'music.mp3', music);
+      // Load images
+      for (let i = 0; i < images.length; i++) {
+        const response = await fetch(images[i]);
+        const blob = await response.blob();
+        ffmpeg.FS('writeFile', `img${i}.jpg`, await fetchFile(blob));
+      }
 
-      // Create slideshow input.txt for ffmpeg
-      const inputTxt = imageUrls.map((_, i) => `file 'img${i}.jpg'\nduration 5`).join('\n') + `\nfile 'img${imageUrls.length - 1}.jpg'`;
-      ffmpeg.FS('writeFile', 'input.txt', inputTxt);
+      // Load audio
+      const audioBlob = await (await fetch(music)).blob();
+      ffmpeg.FS('writeFile', 'audio.mp3', await fetchFile(audioBlob));
 
-      // Generate video from images
+      // Create input.txt for image sequence
+      const concatList = images.map((_, i) => `file 'img${i}.jpg'\nduration 2`).join('\n') + `\nfile 'img${images.length - 1}.jpg'`;
+      ffmpeg.FS('writeFile', 'input.txt', concatList);
+
+      // Create video slideshow
       await ffmpeg.run('-f', 'concat', '-safe', '0', '-i', 'input.txt', '-vsync', 'vfr', '-pix_fmt', 'yuv420p', 'slideshow.mp4');
 
-      // Add audio to the video
-      await ffmpeg.run('-i', 'slideshow.mp4', '-i', 'music.mp3', '-c:v', 'copy', '-c:a', 'aac', '-shortest', 'output.mp4');
+      // Add music
+      await ffmpeg.run('-i', 'slideshow.mp4', '-i', 'audio.mp3', '-shortest', '-c:v', 'copy', '-c:a', 'aac', 'final.mp4');
 
-      const data = ffmpeg.FS('readFile', 'output.mp4');
-      const videoUrl = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+      // Export
+      const data = ffmpeg.FS('readFile', 'final.mp4');
+      const videoURL = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
 
-      const videoElement = document.getElementById('outputVideo');
-      videoElement.src = videoUrl;
+      // Display the video
+      videoElement.src = videoURL;
+      videoElement.style.display = 'block';
       videoElement.load();
-
-      button.disabled = false;
-      button.innerText = "Download Video";
-    };
+      videoElement.play();
+    }
   </script>
 </body>
 </html>
