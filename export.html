@@ -1,78 +1,124 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Export Video Preview</title>
+  <title>Export Preview</title>
+  <meta charset="UTF-8">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #cceeff;
-      text-align: center;
-      padding: 2rem;
+      margin: 0;
+      font-family: Segoe UI, sans-serif;
+      background: linear-gradient(to bottom right, #b3e5fc, #e1f5fe);
+      color: #0d47a1;
     }
-    #videoPreview {
-      display: none;
-      margin-top: 20px;
-      max-width: 90%;
+    #main {
+      display: flex;
+      height: 100vh;
+    }
+    #sidebar {
+      width: 220px;
+      background: linear-gradient(to bottom, #ffffff, #b2ebf2);
+      padding: 15px;
+      box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+    }
+    #content {
+      flex-grow: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    video {
+      width: 100%;
+      max-width: 960px;
+      aspect-ratio: 16 / 9;
+      background: black;
+    }
+    button {
+      padding: 10px 20px;
+      margin-top: 15px;
+      background: #00796b;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 10px;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
-  <h2>Export Video Preview</h2>
-  <p>Click the button below to generate a video preview using your images and music.</p>
-  <button onclick="generateVideo()">🎬 Download Video</button>
-  <video id="videoPreview" controls></video>
+  <div id="main">
+    <div id="sidebar">
+      <h2>Options</h2>
+      <button onclick="startRender()">Download Video</button>
+      <p id="status">Ready</p>
+    </div>
+    <div id="content">
+      <video id="previewVideo" controls>
+        <source src="" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  </div>
 
   <script type="module">
-    import { createFFmpeg, fetchFile } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.4/dist/esm/index.js';
+    import { createFFmpeg, fetchFile } from 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.2/dist/esm/index.js';
 
-    const ffmpeg = createFFmpeg({ log: true });
+    const ffmpeg = createFFmpeg({
+      corePath: 'https://dl.dropboxusercontent.com/scl/fi/jkl6s38r5qpe5vntjxs53/ffmpeg-core.js',
+      wasmPath: 'https://dl.dropboxusercontent.com/scl/fi/mghtnmzceuwda4wd1hkkq/ffmpeg-core.wasm',
+      workerPath: 'https://dl.dropboxusercontent.com/scl/fi/c2p567br6oe5t1nctzo7p/ffmpeg-core.worker.js',
+      log: true,
+    });
 
-    const images = [
-      'https://drive.google.com/uc?export=download&id=1y4OQNs7g7l-wcUreyJZVa_hnPmZAEwbI',
-      'https://drive.google.com/uc?export=download&id=1zUnYZa7yhNlJYTsCM8r0YxdMR_eyeTGY',
-      'https://drive.google.com/uc?export=download&id=1R9AEcbsxSJrL1iI-pEL8DkQ6JQj8gpGM'
-    ];
-    const music = 'https://drive.google.com/uc?export=download&id=1y4OQNs7g7l-wcUreyJZVa_hnPmZAEwbI'; // Example: can switch to another
+    const status = document.getElementById('status');
+    const video = document.getElementById('previewVideo');
 
-    async function generateVideo() {
-      const videoElement = document.getElementById('videoPreview');
+    async function startRender() {
+      status.textContent = "Loading FFmpeg...";
+      if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
-      if (!ffmpeg.isLoaded()) {
-        await ffmpeg.load();
-      }
+      // Example image/audio (replace with real logic later)
+      const images = [
+        'https://findingpast.github.io/images/Vibes.jpg',
+        'https://findingpast.github.io/images/Open.jpg',
+        'https://findingpast.github.io/images/Life.jpg'
+      ];
+      const audio = 'https://findingpast.github.io/music/Sample.mp3';
 
-      // Load images
+      // Download files
       for (let i = 0; i < images.length; i++) {
-        const response = await fetch(images[i]);
-        const blob = await response.blob();
-        ffmpeg.FS('writeFile', `img${i}.jpg`, await fetchFile(blob));
+        const imgName = `img${i}.jpg`;
+        ffmpeg.FS('writeFile', imgName, await fetchFile(images[i]));
       }
-
-      // Load audio
-      const audioBlob = await (await fetch(music)).blob();
-      ffmpeg.FS('writeFile', 'audio.mp3', await fetchFile(audioBlob));
-
-      // Create input.txt for image sequence
-      const concatList = images.map((_, i) => `file 'img${i}.jpg'\nduration 2`).join('\n') + `\nfile 'img${images.length - 1}.jpg'`;
-      ffmpeg.FS('writeFile', 'input.txt', concatList);
+      ffmpeg.FS('writeFile', 'audio.mp3', await fetchFile(audio));
 
       // Create video slideshow
-      await ffmpeg.run('-f', 'concat', '-safe', '0', '-i', 'input.txt', '-vsync', 'vfr', '-pix_fmt', 'yuv420p', 'slideshow.mp4');
+      const listTxt = images.map((_, i) => `file 'img${i}.jpg'\nduration 5`).join('\n') + `\nfile 'img${images.length - 1}.jpg'`;
+      ffmpeg.FS('writeFile', 'list.txt', new TextEncoder().encode(listTxt));
 
-      // Add music
-      await ffmpeg.run('-i', 'slideshow.mp4', '-i', 'audio.mp3', '-shortest', '-c:v', 'copy', '-c:a', 'aac', 'final.mp4');
+      status.textContent = "Rendering video...";
 
-      // Export
-      const data = ffmpeg.FS('readFile', 'final.mp4');
-      const videoURL = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+      await ffmpeg.run(
+        '-f', 'concat',
+        '-safe', '0',
+        '-i', 'list.txt',
+        '-i', 'audio.mp3',
+        '-shortest',
+        '-vf', "scale=1280:720,format=yuv420p",
+        '-c:v', 'libx264',
+        '-preset', 'fast',
+        '-c:a', 'aac',
+        'output.mp4'
+      );
 
-      // Display the video
-      videoElement.src = videoURL;
-      videoElement.style.display = 'block';
-      videoElement.load();
-      videoElement.play();
+      const data = ffmpeg.FS('readFile', 'output.mp4');
+      const videoUrl = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+      video.src = videoUrl;
+      video.load();
+      status.textContent = "Done! Click play to preview or right-click to save.";
     }
   </script>
 </body>
