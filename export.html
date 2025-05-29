@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Export Preview</title>
   <meta charset="UTF-8">
+  <title>Export Video Preview</title>
   <style>
     body {
       margin: 0;
@@ -26,6 +26,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
     }
     video {
       width: 100%;
@@ -52,7 +53,7 @@
   <div id="main">
     <div id="sidebar">
       <h2>Options</h2>
-      <button onclick="startRender()">Download Video</button>
+      <button id="renderBtn">Download Video</button>
       <p id="status">Ready</p>
     </div>
     <div id="content">
@@ -73,53 +74,62 @@
       log: true,
     });
 
-    const status = document.getElementById('status');
     const video = document.getElementById('previewVideo');
+    const status = document.getElementById('status');
+    const renderBtn = document.getElementById('renderBtn');
 
-    async function startRender() {
-      status.textContent = "Loading FFmpeg...";
-      if (!ffmpeg.isLoaded()) await ffmpeg.load();
+    renderBtn.addEventListener('click', async () => {
+      try {
+        status.textContent = "Loading FFmpeg...";
+        if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
-      // Example image/audio (replace with real logic later)
-      const images = [
-        'https://findingpast.github.io/images/Vibes.jpg',
-        'https://findingpast.github.io/images/Open.jpg',
-        'https://findingpast.github.io/images/Life.jpg'
-      ];
-      const audio = 'https://findingpast.github.io/music/Sample.mp3';
+        const images = [
+          'https://findingpast.github.io/images/Vibes.jpeg',
+          'https://findingpast.github.io/images/Open.jpeg',
+          'https://findingpast.github.io/images/Life.jpeg'
+        ];
+        const audio = 'https://findingpast.github.io/music/Sample.mp3';
 
-      // Download files
-      for (let i = 0; i < images.length; i++) {
-        const imgName = `img${i}.jpg`;
-        ffmpeg.FS('writeFile', imgName, await fetchFile(images[i]));
+        // Load all images
+        for (let i = 0; i < images.length; i++) {
+          const name = `img${i}.jpg`;
+          ffmpeg.FS('writeFile', name, await fetchFile(images[i]));
+        }
+
+        // Load audio
+        ffmpeg.FS('writeFile', 'audio.mp3', await fetchFile(audio));
+
+        // Generate list.txt
+        const concatText = images.map((_, i) => `file 'img${i}.jpg'\nduration 5`).join('\n') + `\nfile 'img${images.length - 1}.jpg'`;
+        ffmpeg.FS('writeFile', 'list.txt', new TextEncoder().encode(concatText));
+
+        status.textContent = "Rendering video...";
+
+        await ffmpeg.run(
+          '-f', 'concat',
+          '-safe', '0',
+          '-i', 'list.txt',
+          '-i', 'audio.mp3',
+          '-shortest',
+          '-vf', 'scale=1280:720,format=yuv420p',
+          '-c:v', 'libx264',
+          '-preset', 'fast',
+          '-c:a', 'aac',
+          'output.mp4'
+        );
+
+        const data = ffmpeg.FS('readFile', 'output.mp4');
+        const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
+        const url = URL.createObjectURL(videoBlob);
+
+        video.src = url;
+        video.load();
+        status.textContent = "Done! Video preview ready.";
+      } catch (err) {
+        console.error(err);
+        status.textContent = "Something went wrong!";
       }
-      ffmpeg.FS('writeFile', 'audio.mp3', await fetchFile(audio));
-
-      // Create video slideshow
-      const listTxt = images.map((_, i) => `file 'img${i}.jpg'\nduration 5`).join('\n') + `\nfile 'img${images.length - 1}.jpg'`;
-      ffmpeg.FS('writeFile', 'list.txt', new TextEncoder().encode(listTxt));
-
-      status.textContent = "Rendering video...";
-
-      await ffmpeg.run(
-        '-f', 'concat',
-        '-safe', '0',
-        '-i', 'list.txt',
-        '-i', 'audio.mp3',
-        '-shortest',
-        '-vf', "scale=1280:720,format=yuv420p",
-        '-c:v', 'libx264',
-        '-preset', 'fast',
-        '-c:a', 'aac',
-        'output.mp4'
-      );
-
-      const data = ffmpeg.FS('readFile', 'output.mp4');
-      const videoUrl = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
-      video.src = videoUrl;
-      video.load();
-      status.textContent = "Done! Click play to preview or right-click to save.";
-    }
+    });
   </script>
 </body>
 </html>
