@@ -1,87 +1,100 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>Export Video Preview</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #e1f5fe;
-      padding: 20px;
-      color: #004d40;
+      font-family: 'Segoe UI', sans-serif;
+      background: #d0f0ff;
+      color: #005c6c;
+      padding: 40px;
+      text-align: center;
     }
-    h1 {
-      color: #00796b;
-    }
+
     button {
-      padding: 10px 20px;
-      background-color: #009688;
-      color: white;
+      background-color: #00897b;
       border: none;
+      padding: 12px 20px;
+      color: white;
       border-radius: 20px;
       cursor: pointer;
+      font-size: 16px;
     }
+
     video {
-      display: block;
-      margin-top: 20px;
-      max-width: 720px;
-      width: 100%;
+      margin-top: 30px;
+      width: 640px;
+      max-width: 90%;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>Export Video Preview</h1>
+  <h2>Export Video Preview</h2>
   <p>Click the button below to generate a video preview using your images and music.</p>
   <button onclick="generateVideo()">Download Video</button>
-  <video id="outputVideo" controls style="display:none;"></video>
+  <div id="status"></div>
+  <video id="videoPreview" controls></video>
 
-  <!-- ✅ Import known working ffmpeg.wasm build -->
-  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.10.1/dist/ffmpeg.min.js"></script>
+  <script type="module">
+    import { createFFmpeg, fetchFile } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js';
 
-  <script>
-    const { createFFmpeg, fetchFile } = FFmpeg;
     const ffmpeg = createFFmpeg({
-      log: true,
-      corePath: 'https://rawcdn.githack.com/ffmpegwasm/ffmpeg.wasm-core/0.10.0/dist/ffmpeg-core.js'
+      corePath: 'https://drive.google.com/uc?export=download&id=1y4OQNs7g7l-wcUreyJZVa_hnPmZAEwbI',
+      wasmPath: 'https://drive.google.com/uc?export=download&id=1zUnYZa7yhNlJYTsCM8r0YxdMR_eyeTGY',
+      workerPath: 'https://drive.google.com/uc?export=download&id=1R9AEcbsxSJrL1iI-pEL8DkQ6JQj8gpGM',
+      log: true
     });
 
-    const imageUrls = [
-      "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/images/Vibes.jpeg",
-      "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/images/Open.jpeg",
-      "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/images/Life.jpeg"
-    ];
-    const audioUrl = "https://raw.githubusercontent.com/FindingPast/frutiger-aero/main/music/yume%202kki%20-%20lotus%20waters.mp3";
-
     async function generateVideo() {
-      if (!ffmpeg.isLoaded()) await ffmpeg.load();
+      const status = document.getElementById("status");
+      const preview = document.getElementById("videoPreview");
+      status.innerText = "Loading FFmpeg...";
 
-      const audioData = await fetchFile(audioUrl);
-      ffmpeg.FS('writeFile', 'music.mp3', audioData);
+      await ffmpeg.load();
 
-      for (let i = 0; i < imageUrls.length; i++) {
-        const imgData = await fetchFile(imageUrls[i]);
-        const padded = String(i + 1).padStart(3, '0');
-        ffmpeg.FS('writeFile', `img${padded}.jpg`, imgData);
+      // Placeholder assets: you can change these
+      const images = [
+        "https://findingpast.github.io/assets/images/Vibes.jpeg",
+        "https://findingpast.github.io/assets/images/Open.jpeg",
+        "https://findingpast.github.io/assets/images/Life.jpeg"
+      ];
+
+      const musicURL = "https://findingpast.github.io/assets/music/yume 2kki - lotus waters.mp3";
+
+      status.innerText = "Fetching files...";
+      for (let i = 0; i < images.length; i++) {
+        const imgData = await fetchFile(images[i]);
+        ffmpeg.FS('writeFile', `image${i}.jpg`, imgData);
       }
 
+      const musicData = await fetchFile(musicURL);
+      ffmpeg.FS('writeFile', 'audio.mp3', musicData);
+
+      const inputTxt = images.map((_, i) => `file 'image${i}.jpg'\nduration 5`).join('\n') + '\nfile \'image2.jpg\'\n'; // final still
+      ffmpeg.FS('writeFile', 'input.txt', inputTxt);
+
+      status.innerText = "Encoding video...";
+
       await ffmpeg.run(
-        '-framerate', '1/5',
-        '-i', 'img%03d.jpg',
-        '-i', 'music.mp3',
-        '-c:v', 'libx264',
-        '-r', '30',
-        '-pix_fmt', 'yuv420p',
+        '-f', 'concat',
+        '-safe', '0',
+        '-i', 'input.txt',
+        '-i', 'audio.mp3',
+        '-vf', 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2',
         '-shortest',
+        '-c:v', 'libx264',
+        '-c:a', 'aac',
+        '-pix_fmt', 'yuv420p',
         'output.mp4'
       );
 
       const data = ffmpeg.FS('readFile', 'output.mp4');
-      const video = document.getElementById('outputVideo');
-      video.src = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
-      video.style.display = 'block';
+      const url = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+      preview.src = url;
+      status.innerText = "Done! Video ready.";
     }
-
-    // Make function globally accessible
-    window.generateVideo = generateVideo;
   </script>
 </body>
 </html>
