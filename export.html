@@ -1,30 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Export Video - Frutiger Aero</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
       background: linear-gradient(to bottom right, #b3e5fc, #e1f5fe);
-      color: #0d47a1;
       text-align: center;
-      padding: 30px;
+      padding: 20px;
     }
     video {
       width: 100%;
       max-width: 720px;
       margin: 20px auto;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      display: none;
     }
     button {
-      padding: 10px 20px;
-      font-size: 16px;
       background-color: #00796b;
       color: white;
+      padding: 10px 20px;
       border: none;
       border-radius: 8px;
+      font-size: 16px;
       cursor: pointer;
     }
     button:hover {
@@ -35,21 +33,18 @@
 <body>
   <h1>Export Video</h1>
   <p>This preview will simulate the final export.</p>
-  <video id="preview" controls>
-    <source src="output.mp4" type="video/mp4" />
-    Your browser does not support the video tag.
-  </video>
-  <br />
+  <video id="preview" controls></video>
+  <br>
   <button onclick="generateVideo()">Download Final Video</button>
 
   <script type="module">
     import { createFFmpeg, fetchFile } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.9/dist/esm/index.js';
 
     const ffmpeg = createFFmpeg({
-      corePath: "https://www.dropbox.com/scl/fi/jkl6s38r5qpe5vntjxs53/ffmpeg-core.js?rlkey=tgbq09222ov0kwvhhyrws7tr7&raw=1",
-      wasmPath: "https://www.dropbox.com/scl/fi/mghtnmzceuwda4wd1hkkq/ffmpeg-core.wasm?rlkey=5syhn78kcifeef45xtrh1gmt3&raw=1",
-      workerPath: "https://www.dropbox.com/scl/fi/c2p567br6oe5t1nctzo7p/ffmpeg-core.worker.js?rlkey=4hk533iv4zqxnhyg6lxkbcjoh&raw=1",
-      log: true
+      log: true,
+      corePath: 'https://www.dropbox.com/scl/fi/jkl6s38r5qpe5vntjxs53/ffmpeg-core.js?rlkey=tgbq09222ov0kwvhhyrws7tr7&raw=1',
+      wasmPath: 'https://www.dropbox.com/scl/fi/mghtnmzceuwda4wd1hkkq/ffmpeg-core.wasm?rlkey=5syhn78kcifeef45xtrh1gmt3&raw=1',
+      workerPath: 'https://www.dropbox.com/scl/fi/c2p567br6oe5t1nctzo7p/ffmpeg-core.worker.js?rlkey=4hk533iv4zqxnhyg6lxkbcjoh&raw=1'
     });
 
     async function generateVideo() {
@@ -66,23 +61,17 @@
         await ffmpeg.load();
       }
 
-      // Write image files to FS
       for (let i = 0; i < images.length; i++) {
-        const response = await fetch(images[i]);
-        const blob = await response.blob();
-        await ffmpeg.FS('writeFile', `img${i}.jpg`, await fetchFile(blob));
+        const imgBlob = await fetch(images[i]).then(res => res.blob());
+        ffmpeg.FS('writeFile', `img${i}.jpg`, await fetchFile(imgBlob));
       }
 
-      // Write audio file to FS
-      const audioResponse = await fetch(audioUrl);
-      const audioBlob = await audioResponse.blob();
-      await ffmpeg.FS('writeFile', 'music.mp3', await fetchFile(audioBlob));
+      const audioBlob = await fetch(audioUrl).then(res => res.blob());
+      ffmpeg.FS('writeFile', 'music.mp3', await fetchFile(audioBlob));
 
-      // Generate input file list
-      const inputList = images.map((_, i) => `file 'img${i}.jpg'\nduration 5`).join('\n') + `\nfile 'img${images.length - 1}.jpg'`;
-      ffmpeg.FS('writeFile', 'input.txt', inputList);
+      const inputTxt = images.map((_, i) => `file 'img${i}.jpg'\nduration 5`).join('\n') + `\nfile 'img${images.length - 1}.jpg'`;
+      ffmpeg.FS('writeFile', 'input.txt', inputTxt);
 
-      // Run ffmpeg command to combine images and audio
       await ffmpeg.run(
         '-f', 'concat',
         '-safe', '0',
@@ -90,9 +79,6 @@
         '-i', 'music.mp3',
         '-vf', 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2',
         '-c:v', 'libx264',
-        '-tune', 'stillimage',
-        '-c:a', 'aac',
-        '-b:a', '192k',
         '-pix_fmt', 'yuv420p',
         '-shortest',
         'output.mp4'
@@ -103,14 +89,12 @@
 
       const preview = document.getElementById('preview');
       preview.src = videoUrl;
+      preview.style.display = 'block';
 
-      const downloadLink = document.createElement('a');
-      downloadLink.href = videoUrl;
-      downloadLink.download = 'frutiger-aero-export.mp4';
-      downloadLink.textContent = 'Click here if download did not start';
-      document.body.appendChild(downloadLink);
-
-      downloadLink.click();
+      const a = document.createElement('a');
+      a.href = videoUrl;
+      a.download = 'frutiger-aero-export.mp4';
+      a.click();
     }
   </script>
 </body>
