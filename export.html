@@ -2,96 +2,104 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Export Video - Frutiger Aero</title>
   <style>
     body {
-      font-family: system-ui, sans-serif;
-      background: linear-gradient(to bottom, #cceeff 0%, #99ddff 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
+      background: linear-gradient(#c2e9fb, #a1c4fd);
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
+      padding: 2em;
+      color: #003049;
+      text-align: center;
     }
+
     h1 {
-      color: #005577;
+      font-size: 2em;
+      margin-bottom: 0.5em;
     }
+
     button {
-      padding: 12px 24px;
-      background: #007766;
-      border: none;
+      background-color: #007f5f;
       color: white;
-      font-weight: bold;
+      border: none;
+      padding: 0.75em 1.5em;
       border-radius: 6px;
+      font-size: 1em;
       cursor: pointer;
-      margin-top: 1rem;
+      transition: background-color 0.3s ease;
     }
+
+    button:hover {
+      background-color: #005f43;
+    }
+
     video {
-      margin-top: 2rem;
-      width: 480px;
-      border-radius: 12px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.2);
+      margin-top: 2em;
+      width: 640px;
+      max-width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
   </style>
 </head>
 <body>
   <h1>Export Video</h1>
   <p>This preview will simulate the final export.</p>
-  <button onclick="startRender()">Download Final Video</button>
-  <video id="preview" controls></video>
+  <button id="downloadBtn">Download Final Video</button>
+  <video id="videoPreview" controls></video>
 
   <script type="module">
-    import { createFFmpeg, fetchFile } from 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js';
+    import { createFFmpeg, fetchFile } from "https://findingpast.github.io/FFmpeg/ffmpeg-core.js";
 
     const ffmpeg = createFFmpeg({
-      log: true,
-      corePath: 'https://www.dl.dropboxusercontent.com/scl/fi/mghtnmzceuwda4wd1hkkq/ffmpeg-core.wasm?rlkey=5syhn78kcifeef45xtrh1gmt3&dl=1',
-      coreURL: {
-        js: 'https://findingpast.github.io/FFmpeg/ffmpeg-core.js',
-        wasm: 'https://www.dl.dropboxusercontent.com/scl/fi/mghtnmzceuwda4wd1hkkq/ffmpeg-core.wasm?rlkey=5syhn78kcifeef45xtrh1gmt3&dl=1',
-        worker: 'https://findingpast.github.io/FFmpeg/ffmpeg-core.worker.js'
-      }
+      corePath: "https://www.dropbox.com/scl/fi/mghtnmzceuwda4wd1hkkq/ffmpeg-core.wasm?rlkey=5syhn78kcifeef45xtrh1gmt3&st=v7ewhyok&dl=1",
+      log: true
     });
 
-    async function startRender() {
-      const preview = document.getElementById('preview');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const videoPreview = document.getElementById('videoPreview');
 
-      await ffmpeg.load();
+    downloadBtn.addEventListener('click', async () => {
+      downloadBtn.disabled = true;
+      downloadBtn.textContent = "Processing...";
 
-      // Replace these with actual assets you have:
-      const image1 = await fetchFile('assets/img1.jpg');
-      const image2 = await fetchFile('assets/img2.jpg');
-      const audio = await fetchFile('assets/music.mp3');
+      if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
-      ffmpeg.FS('writeFile', 'img1.jpg', image1);
-      ffmpeg.FS('writeFile', 'img2.jpg', image2);
-      ffmpeg.FS('writeFile', 'music.mp3', audio);
+      const image = await fetchFile("assets/sample.jpg"); // adjust if needed
+      const audio = await fetchFile("assets/sample.mp3"); // adjust if needed
+
+      ffmpeg.FS('writeFile', 'image.jpg', image);
+      ffmpeg.FS('writeFile', 'audio.mp3', audio);
 
       await ffmpeg.run(
-        '-loop', '1', '-t', '3', '-i', 'img1.jpg',
-        '-loop', '1', '-t', '3', '-i', 'img2.jpg',
-        '-i', 'music.mp3',
-        '-filter_complex', '[0:v][1:v]concat=n=2:v=1:a=0,format=yuv420p[v]',
-        '-map', '[v]', '-map', '2:a',
-        '-shortest', 'output.mp4'
+        '-loop', '1',
+        '-i', 'image.jpg',
+        '-i', 'audio.mp3',
+        '-c:v', 'libx264',
+        '-c:a', 'aac',
+        '-shortest',
+        '-t', '5',
+        'output.mp4'
       );
 
       const data = ffmpeg.FS('readFile', 'output.mp4');
       const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
-      const url = URL.createObjectURL(videoBlob);
+      const videoURL = URL.createObjectURL(videoBlob);
 
-      preview.src = url;
+      videoPreview.src = videoURL;
 
-      const dl = document.createElement('a');
-      dl.href = url;
-      dl.download = 'exported_video.mp4';
-      dl.textContent = 'Download Final Video';
-      dl.style.marginTop = '1rem';
+      const a = document.createElement('a');
+      a.href = videoURL;
+      a.download = 'exported-video.mp4';
+      a.textContent = 'Download Video';
+      a.style.display = 'block';
+      a.style.marginTop = '1em';
+      document.body.appendChild(a);
 
-      const oldButton = document.querySelector('button');
-      oldButton.replaceWith(dl);
-    }
+      downloadBtn.textContent = "Download Final Video";
+      downloadBtn.disabled = false;
+    });
   </script>
 </body>
 </html>
