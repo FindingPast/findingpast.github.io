@@ -313,9 +313,8 @@
     function startPreview() {
       if (!isPreviewPlaying) {
         isPreviewPlaying = true;
-        // Reset to first image
         currentImageIndex = 0;
-        // Show the preview image
+        currentSongIndex = 0;
         const previewSlide = document.getElementById("previewSlide");
         previewSlide.style.display = "block";
         previewSlide.src = imageUrls[0];
@@ -328,26 +327,24 @@
       }
     }
 
-    // Initial setup
-    function initializePreview() {
-      const previewAudio = document.getElementById("previewAudio");
-      previewAudio.volume = 0.5;
-      // Start with preview image hidden
-      document.getElementById("previewSlide").style.display = "none";
-    }
-
     function playNextSong() {
       if (!isPreviewPlaying) return;
       
-      const currentAudio = document.getElementById("previewAudio");
-      currentAudio.src = playlist[currentSongIndex].src;
-      document.getElementById("current-track").textContent = 
-        playlist[currentSongIndex].getAttribute("data-title");
+      const previewAudio = document.getElementById("previewAudio");
+      const audioElements = document.querySelectorAll('#playlist audio');
       
-      currentAudio.play();
-      currentAudio.onended = () => {
-        currentSongIndex = (currentSongIndex + 1) % playlist.length;
-        playNextSong();
+      if (currentSongIndex >= audioElements.length) {
+        currentSongIndex = 0; // Reset to first song if we've played all songs
+      }
+      
+      const currentSong = audioElements[currentSongIndex];
+      previewAudio.src = currentSong.src;
+      document.getElementById("current-track").textContent = currentSong.getAttribute("data-title");
+      
+      previewAudio.play();
+      previewAudio.onended = () => {
+        currentSongIndex++;
+        playNextSong(); // Play the next song when current one ends
       };
     }
 
