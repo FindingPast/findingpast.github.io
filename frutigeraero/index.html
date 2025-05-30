@@ -235,43 +235,36 @@
       document.getElementById("previewSlide").src = current;
     }
 
-    function nextImage() {
-      currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
-      updateAllDisplays();
-    }
-
-    function prevImage() {
-      currentImageIndex = (currentImageIndex - 1 + imageUrls.length) % imageUrls.length;
-      updateAllDisplays();
-    }
-
-    function toggleFullscreen() {
-      const container = document.getElementById("previewContainer");
-      if (!document.fullscreenElement) {
-        container.requestFullscreen();
-      } else {
-        document.exitFullscreen();
-      }
-    }
-
-    function downloadAsVideo() {
-      alert("Generating downloadable video preview... (WIP)");
-    }
-
-    function updateInterval(value) {
-      document.getElementById("intervalValue").textContent = value + " seconds";
-      intervalTime = value * 1000;
-      clearInterval(slideshowInterval);
-      startSlideshow();
-    }
-
     function startSlideshow() {
+      clearInterval(slideshowInterval); // Clear any existing interval
       slideshowInterval = setInterval(() => {
         currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
         updateAllDisplays();
       }, intervalTime);
     }
 
+    function nextImage() {
+      currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+      updateAllDisplays();
+      // Reset the slideshow timer when manually navigating
+      startSlideshow();
+    }
+
+    function prevImage() {
+      currentImageIndex = (currentImageIndex - 1 + imageUrls.length) % imageUrls.length;
+      updateAllDisplays();
+      // Reset the slideshow timer when manually navigating
+      startSlideshow();
+    }
+
+    function updateInterval(value) {
+      document.getElementById("intervalValue").textContent = value + " seconds";
+      intervalTime = value * 1000;
+      startSlideshow(); // Restart with new interval
+    }
+
+    // Start the slideshow immediately when the page loads
+    startSlideshow();
     function initializePreview() {
       // Get all audio elements and store them in playlist
       playlist.push(...document.querySelectorAll('#playlist audio'));
