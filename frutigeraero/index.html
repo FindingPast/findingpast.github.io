@@ -298,18 +298,6 @@
       }
     }
 
-    function startPreview() {
-      if (!isPreviewPlaying) {
-        isPreviewPlaying = true;
-        currentSongIndex = 0;
-        document.getElementById("previewControl").textContent = "Pause Preview";
-        playNextSong();
-        startSlideshow();
-      } else {
-        stopPreview();
-      }
-    }
-
     function stopPreview() {
       isPreviewPlaying = false;
       const currentAudio = document.getElementById("previewAudio");
@@ -318,6 +306,34 @@
       clearInterval(previewSlideshowInterval);
       document.getElementById("current-track").textContent = "-";
       document.getElementById("previewControl").textContent = "Start Preview";
+      // Clear the preview image
+      document.getElementById("previewSlide").style.display = "none";
+    }
+
+    function startPreview() {
+      if (!isPreviewPlaying) {
+        isPreviewPlaying = true;
+        // Reset to first image
+        currentImageIndex = 0;
+        // Show the preview image
+        const previewSlide = document.getElementById("previewSlide");
+        previewSlide.style.display = "block";
+        previewSlide.src = imageUrls[0];
+        
+        document.getElementById("previewControl").textContent = "Pause Preview";
+        playNextSong();
+        startSlideshow();
+      } else {
+        stopPreview();
+      }
+    }
+
+    // Initial setup
+    function initializePreview() {
+      const previewAudio = document.getElementById("previewAudio");
+      previewAudio.volume = 0.5;
+      // Start with preview image hidden
+      document.getElementById("previewSlide").style.display = "none";
     }
 
     function playNextSong() {
@@ -333,11 +349,6 @@
         currentSongIndex = (currentSongIndex + 1) % playlist.length;
         playNextSong();
       };
-    }
-
-    function initializePreview() {
-      const previewAudio = document.getElementById("previewAudio");
-      previewAudio.volume = 0.5;
     }
 
     function downloadAsVideo() {
