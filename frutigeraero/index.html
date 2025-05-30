@@ -324,7 +324,7 @@
     function playNextSong() {
       if (!isPreviewPlaying) return;
       
-      const audioElements = Array.from(document.querySelectorAll('#music audio'));
+      const audioElements = Array.from(document.querySelectorAll('#playlist audio'));
       if (audioElements.length === 0) return;
       
       const previewAudio = document.getElementById("previewAudio");
@@ -374,6 +374,8 @@
       alert('Video download feature is not implemented yet');
     }
 
+    // Move initializePreview() call to the end of the script
+    initializePreview();
     updateAllDisplays();
   </script>
 </body>
