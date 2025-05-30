@@ -60,15 +60,14 @@
       align-items: center;
       justify-content: center;
       position: relative;
-      overflow: hidden; /* Ensure content doesn't overflow */
+      overflow: hidden;
     }
 
     #previewSlide {
-      max-width: 100%;
-      max-height: 100%;
-      width: auto;
-      height: auto;
-      object-fit: contain; /* Maintain aspect ratio without stretching */
+      min-width: 100%;
+      min-height: 100%;
+      object-fit: cover; /* This ensures the image fills the container while maintaining aspect ratio */
+      position: absolute;
     }
 
     #previewContainer:fullscreen {
@@ -303,8 +302,11 @@
       if (!isPreviewPlaying) {
         isPreviewPlaying = true;
         currentSongIndex = 0;
+        document.getElementById("previewControl").textContent = "Pause Preview";
         playNextSong();
         startSlideshow();
+      } else {
+        stopPreview();
       }
     }
 
@@ -315,12 +317,15 @@
       currentAudio.currentTime = 0;
       clearInterval(slideshowInterval);
       document.getElementById("current-track").textContent = "-";
+      document.getElementById("previewControl").textContent = "Start Preview";
     }
 
+    // Remove the automatic slideshow start
     // Initial setup
     initializePreview();
     updateAllDisplays();
-    // Don't auto-start the preview until user explicitly starts it
+    // Don't start slideshow automatically
+    // startSlideshow();
   </script>
 </body>
 </html>
