@@ -198,6 +198,7 @@
   <a href="../" class="back">← Back to Home</a>
 
   <script>
+    // Global declarations at the top
     const tabs = ['preview', 'images', 'music'];
     const imageUrls = [
       "../assets/images/Vibes.jpeg",
@@ -209,6 +210,9 @@
     let currentImageIndex = 0;
     let intervalTime = 5000;
     let slideshowInterval;
+    let currentSongIndex = 0;
+    let isPreviewPlaying = false;
+    const playlist = [];
 
     function switchTab(tab) {
       tabs.forEach(t => {
@@ -218,11 +222,10 @@
       document.getElementById(tab).classList.add('active');
       document.getElementById('tab-' + tab).classList.add('active');
 
-      const audio = document.getElementById("previewAudio");
-      if (tab === "preview") {
-        audio.play();
-      } else {
-        audio.pause();
+      // Don't automatically start/stop preview
+      // Just update the UI state
+      if (tab !== 'preview' && isPreviewPlaying) {
+        stopPreview();
       }
     }
 
@@ -269,13 +272,6 @@
       }, intervalTime);
     }
 
-    // Initial setup
-    updateAllDisplays();
-    startSlideshow();
-    let currentSongIndex = 0;
-    let isPreviewPlaying = false;
-    const playlist = [];
-    
     function initializePreview() {
       // Get all audio elements and store them in playlist
       playlist.push(...document.querySelectorAll('#playlist audio'));
@@ -283,7 +279,7 @@
       // Remove the loop attribute from preview audio
       document.getElementById("previewAudio").removeAttribute("loop");
     }
-    
+
     function playNextSong() {
       if (currentSongIndex >= playlist.length) {
         stopPreview();
@@ -302,7 +298,7 @@
         setTimeout(playNextSong, 2000); // 2-second gap between songs
       };
     }
-    
+
     function startPreview() {
       if (!isPreviewPlaying) {
         isPreviewPlaying = true;
@@ -311,7 +307,7 @@
         startSlideshow();
       }
     }
-    
+
     function stopPreview() {
       isPreviewPlaying = false;
       const currentAudio = document.getElementById("previewAudio");
@@ -320,27 +316,11 @@
       clearInterval(slideshowInterval);
       document.getElementById("current-track").textContent = "-";
     }
-    
-    function switchTab(tab) {
-      tabs.forEach(t => {
-        document.getElementById(t).classList.remove('active');
-        document.getElementById('tab-' + t).classList.remove('active');
-      });
-      document.getElementById(tab).classList.add('active');
-      document.getElementById('tab-' + tab).classList.add('active');
 
-      if (tab === "preview") {
-        startPreview();
-      } else {
-        stopPreview();
-      }
-    }
-    
-    // Initialize everything
+    // Initial setup
     initializePreview();
     updateAllDisplays();
-    // Don't auto-start the preview until user switches to preview tab
-    // startSlideshow();
+    // Don't auto-start the preview until user explicitly starts it
   </script>
 </body>
 </html>
