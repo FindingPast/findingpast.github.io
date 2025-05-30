@@ -166,6 +166,7 @@
     </audio>
     <div class="preview-controls">
       <button onclick="toggleFullscreen()">Fullscreen</button>
+      <button onclick="isPreviewPlaying ? stopPreview() : startPreview()" id="previewControl">Start Preview</button>
       <button onclick="downloadAsVideo()">Download Video</button>
     </div>
   </div>
@@ -186,15 +187,12 @@
   </div>
 
   <div id="music" class="tab-content">
-    <audio controls loop>
-      <source src="../assets/music/Mii Editor - Nintendo.mp3" type="audio/mp3">
-    </audio>
-    <audio controls loop>
-      <source src="../assets/music/takeshi abo - LEASE.mp3" type="audio/mp3">
-    </audio>
-    <audio controls loop>
-      <source src="../assets/music/yume 2kki - lotus waters.mp3" type="audio/mp3">
-    </audio>
+    <div id="playlist">
+      <audio data-title="Mii Editor" src="../assets/music/Mii Editor - Nintendo.mp3"></audio>
+      <audio data-title="LEASE" src="../assets/music/takeshi abo - LEASE.mp3"></audio>
+      <audio data-title="Lotus Waters" src="../assets/music/yume 2kki - lotus waters.mp3"></audio>
+    </div>
+    <div id="now-playing">Now Playing: <span id="current-track">-</span></div>
   </div>
 
   <a href="../" class="back">← Back to Home</a>
@@ -274,6 +272,75 @@
     // Initial setup
     updateAllDisplays();
     startSlideshow();
+    let currentSongIndex = 0;
+    let isPreviewPlaying = false;
+    const playlist = [];
+    
+    function initializePreview() {
+      // Get all audio elements and store them in playlist
+      playlist.push(...document.querySelectorAll('#playlist audio'));
+      
+      // Remove the loop attribute from preview audio
+      document.getElementById("previewAudio").removeAttribute("loop");
+    }
+    
+    function playNextSong() {
+      if (currentSongIndex >= playlist.length) {
+        stopPreview();
+        return;
+      }
+      
+      const currentAudio = document.getElementById("previewAudio");
+      currentAudio.src = playlist[currentSongIndex].src;
+      document.getElementById("current-track").textContent = 
+        playlist[currentSongIndex].getAttribute("data-title");
+      
+      currentAudio.play();
+      currentSongIndex++;
+      
+      currentAudio.onended = () => {
+        setTimeout(playNextSong, 2000); // 2-second gap between songs
+      };
+    }
+    
+    function startPreview() {
+      if (!isPreviewPlaying) {
+        isPreviewPlaying = true;
+        currentSongIndex = 0;
+        playNextSong();
+        startSlideshow();
+      }
+    }
+    
+    function stopPreview() {
+      isPreviewPlaying = false;
+      const currentAudio = document.getElementById("previewAudio");
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      clearInterval(slideshowInterval);
+      document.getElementById("current-track").textContent = "-";
+    }
+    
+    function switchTab(tab) {
+      tabs.forEach(t => {
+        document.getElementById(t).classList.remove('active');
+        document.getElementById('tab-' + t).classList.remove('active');
+      });
+      document.getElementById(tab).classList.add('active');
+      document.getElementById('tab-' + tab).classList.add('active');
+
+      if (tab === "preview") {
+        startPreview();
+      } else {
+        stopPreview();
+      }
+    }
+    
+    // Initialize everything
+    initializePreview();
+    updateAllDisplays();
+    // Don't auto-start the preview until user switches to preview tab
+    // startSlideshow();
   </script>
 </body>
 </html>
