@@ -60,18 +60,25 @@
       align-items: center;
       justify-content: center;
       position: relative;
+      overflow: hidden; /* Ensure content doesn't overflow */
     }
 
     #previewSlide {
-      max-height: 100%;
       max-width: 100%;
-      object-fit: contain;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain; /* Maintain aspect ratio without stretching */
     }
 
     #previewContainer:fullscreen {
       background: black;
     }
 
+    #previewContainer:fullscreen #previewSlide {
+      max-width: 100vw;
+      max-height: 100vh;
+    }
     .image-square-wrapper {
       width: 400px;
       height: 400px;
