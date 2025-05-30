@@ -216,74 +216,11 @@
     ];
     let currentImageIndex = 0;
     let intervalTime = 5000;
-    let slideshowInterval;
-    let currentSongIndex = 0;
-    let isPreviewPlaying = false;
-    const playlist = [];
-
-    function switchTab(tab) {
-      tabs.forEach(t => {
-        document.getElementById(t).classList.remove('active');
-        document.getElementById('tab-' + t).classList.remove('active');
-      });
-      document.getElementById(tab).classList.add('active');
-      document.getElementById('tab-' + tab).classList.add('active');
-
-      // Don't automatically start/stop preview
-      // Just update the UI state
-      if (tab !== 'preview' && isPreviewPlaying) {
-        stopPreview();
-      }
-    }
-
-    function updateAllDisplays() {
-      const current = imageUrls[currentImageIndex];
-      document.getElementById("imageSlide").src = current;
-      document.getElementById("previewSlide").src = current;
-    }
-
     let previewSlideshowInterval;
     let imageSlideshowInterval;
-
-    function startSlideshow() {
-      // Only start the preview slideshow if preview is playing
-      if (isPreviewPlaying) {
-        clearInterval(previewSlideshowInterval);
-        previewSlideshowInterval = setInterval(() => {
-          currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
-          updateAllDisplays();
-        }, intervalTime);
-      } else {
-        // For image tab slideshow
-        clearInterval(imageSlideshowInterval);
-        imageSlideshowInterval = setInterval(() => {
-          currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
-          updateAllDisplays();
-        }, intervalTime);
-      }
-    }
-
-    function startPreview() {
-      if (!isPreviewPlaying) {
-        isPreviewPlaying = true;
-        currentSongIndex = 0;
-        document.getElementById("previewControl").textContent = "Pause Preview";
-        playNextSong();
-        startSlideshow(); // This will now use previewSlideshowInterval
-      } else {
-        stopPreview();
-      }
-    }
-
-    function stopPreview() {
-      isPreviewPlaying = false;
-      const currentAudio = document.getElementById("previewAudio");
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
-      clearInterval(previewSlideshowInterval);
-      document.getElementById("current-track").textContent = "-";
-      document.getElementById("previewControl").textContent = "Start Preview";
-    }
+    let currentSongIndex = 0;
+    let isPreviewPlaying = false;
+    const playlist = Array.from(document.querySelectorAll('#playlist audio'));
 
     function switchTab(tab) {
       tabs.forEach(t => {
@@ -301,13 +238,115 @@
       if (tab === 'images') {
         startSlideshow();
       }
+      
+      // Stop preview when switching away from preview tab
+      if (tab !== 'preview' && isPreviewPlaying) {
+        stopPreview();
+      }
+    }
+
+    function toggleFullscreen() {
+      const container = document.getElementById('previewContainer');
+      if (!document.fullscreenElement) {
+        container.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    function updateAllDisplays() {
+      const current = imageUrls[currentImageIndex];
+      document.getElementById("imageSlide").src = current;
+      document.getElementById("previewSlide").src = current;
+    }
+
+    function startSlideshow() {
+      if (document.getElementById('images').classList.contains('active')) {
+        clearInterval(imageSlideshowInterval);
+        imageSlideshowInterval = setInterval(() => {
+          currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+          updateAllDisplays();
+        }, intervalTime);
+      } else if (isPreviewPlaying) {
+        clearInterval(previewSlideshowInterval);
+        previewSlideshowInterval = setInterval(() => {
+          currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+          updateAllDisplays();
+        }, intervalTime);
+      }
+    }
+
+    function prevImage() {
+      clearInterval(imageSlideshowInterval);
+      currentImageIndex = (currentImageIndex - 1 + imageUrls.length) % imageUrls.length;
+      updateAllDisplays();
+      startSlideshow();
+    }
+
+    function nextImage() {
+      clearInterval(imageSlideshowInterval);
+      currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+      updateAllDisplays();
+      startSlideshow();
+    }
+
+    function updateInterval(value) {
+      intervalTime = value * 1000;
+      document.getElementById('intervalValue').textContent = value + ' seconds';
+      if (document.getElementById('images').classList.contains('active')) {
+        startSlideshow();
+      }
+    }
+
+    function startPreview() {
+      if (!isPreviewPlaying) {
+        isPreviewPlaying = true;
+        currentSongIndex = 0;
+        document.getElementById("previewControl").textContent = "Pause Preview";
+        playNextSong();
+        startSlideshow();
+      } else {
+        stopPreview();
+      }
+    }
+
+    function stopPreview() {
+      isPreviewPlaying = false;
+      const currentAudio = document.getElementById("previewAudio");
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      clearInterval(previewSlideshowInterval);
+      document.getElementById("current-track").textContent = "-";
+      document.getElementById("previewControl").textContent = "Start Preview";
+    }
+
+    function playNextSong() {
+      if (!isPreviewPlaying) return;
+      
+      const currentAudio = document.getElementById("previewAudio");
+      currentAudio.src = playlist[currentSongIndex].src;
+      document.getElementById("current-track").textContent = 
+        playlist[currentSongIndex].getAttribute("data-title");
+      
+      currentAudio.play();
+      currentAudio.onended = () => {
+        currentSongIndex = (currentSongIndex + 1) % playlist.length;
+        playNextSong();
+      };
+    }
+
+    function initializePreview() {
+      const previewAudio = document.getElementById("previewAudio");
+      previewAudio.volume = 0.5;
+    }
+
+    function downloadAsVideo() {
+      alert('Video download feature is not implemented yet');
     }
 
     // Initial setup
     initializePreview();
     updateAllDisplays();
-    // Don't start slideshow automatically
-    // startSlideshow();
   </script>
 </body>
 </html>
