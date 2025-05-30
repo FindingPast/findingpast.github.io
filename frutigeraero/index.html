@@ -64,10 +64,11 @@
     }
 
     #previewSlide {
-      min-width: 100%;
-      min-height: 100%;
-      object-fit: cover; /* This ensures the image fills the container while maintaining aspect ratio */
-      position: absolute;
+      height: 100%;
+      width: auto;
+      object-fit: contain; /* This ensures the image maintains its aspect ratio */
+      max-width: none; /* Remove max-width constraint */
+      position: relative;
     }
 
     #previewContainer:fullscreen {
@@ -241,61 +242,25 @@
       document.getElementById("previewSlide").src = current;
     }
 
+    let previewSlideshowInterval;
+    let imageSlideshowInterval;
+
     function startSlideshow() {
-      clearInterval(slideshowInterval); // Clear any existing interval
-      slideshowInterval = setInterval(() => {
-        currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
-        updateAllDisplays();
-      }, intervalTime);
-    }
-
-    function nextImage() {
-      currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
-      updateAllDisplays();
-      // Reset the slideshow timer when manually navigating
-      startSlideshow();
-    }
-
-    function prevImage() {
-      currentImageIndex = (currentImageIndex - 1 + imageUrls.length) % imageUrls.length;
-      updateAllDisplays();
-      // Reset the slideshow timer when manually navigating
-      startSlideshow();
-    }
-
-    function updateInterval(value) {
-      document.getElementById("intervalValue").textContent = value + " seconds";
-      intervalTime = value * 1000;
-      startSlideshow(); // Restart with new interval
-    }
-
-    // Start the slideshow immediately when the page loads
-    startSlideshow();
-    function initializePreview() {
-      // Get all audio elements and store them in playlist
-      playlist.push(...document.querySelectorAll('#playlist audio'));
-      
-      // Remove the loop attribute from preview audio
-      document.getElementById("previewAudio").removeAttribute("loop");
-    }
-
-    function playNextSong() {
-      if (currentSongIndex >= playlist.length) {
-        stopPreview();
-        return;
+      // Only start the preview slideshow if preview is playing
+      if (isPreviewPlaying) {
+        clearInterval(previewSlideshowInterval);
+        previewSlideshowInterval = setInterval(() => {
+          currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+          updateAllDisplays();
+        }, intervalTime);
+      } else {
+        // For image tab slideshow
+        clearInterval(imageSlideshowInterval);
+        imageSlideshowInterval = setInterval(() => {
+          currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+          updateAllDisplays();
+        }, intervalTime);
       }
-      
-      const currentAudio = document.getElementById("previewAudio");
-      currentAudio.src = playlist[currentSongIndex].src;
-      document.getElementById("current-track").textContent = 
-        playlist[currentSongIndex].getAttribute("data-title");
-      
-      currentAudio.play();
-      currentSongIndex++;
-      
-      currentAudio.onended = () => {
-        setTimeout(playNextSong, 2000); // 2-second gap between songs
-      };
     }
 
     function startPreview() {
@@ -304,7 +269,7 @@
         currentSongIndex = 0;
         document.getElementById("previewControl").textContent = "Pause Preview";
         playNextSong();
-        startSlideshow();
+        startSlideshow(); // This will now use previewSlideshowInterval
       } else {
         stopPreview();
       }
@@ -315,12 +280,29 @@
       const currentAudio = document.getElementById("previewAudio");
       currentAudio.pause();
       currentAudio.currentTime = 0;
-      clearInterval(slideshowInterval);
+      clearInterval(previewSlideshowInterval);
       document.getElementById("current-track").textContent = "-";
       document.getElementById("previewControl").textContent = "Start Preview";
     }
 
-    // Remove the automatic slideshow start
+    function switchTab(tab) {
+      tabs.forEach(t => {
+        document.getElementById(t).classList.remove('active');
+        document.getElementById('tab-' + t).classList.remove('active');
+      });
+      document.getElementById(tab).classList.add('active');
+      document.getElementById('tab-' + tab).classList.add('active');
+
+      // Clear both intervals when switching tabs
+      clearInterval(previewSlideshowInterval);
+      clearInterval(imageSlideshowInterval);
+
+      // Start appropriate slideshow based on tab
+      if (tab === 'images') {
+        startSlideshow();
+      }
+    }
+
     // Initial setup
     initializePreview();
     updateAllDisplays();
