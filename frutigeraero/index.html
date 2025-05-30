@@ -310,6 +310,35 @@
       document.getElementById("previewSlide").style.display = "none";
     }
 
+    // Initial setup
+    function initializePreview() {
+      const previewAudio = document.getElementById("previewAudio");
+      previewAudio.volume = 0.5;
+      // Hide the preview image on page load
+      const previewSlide = document.getElementById("previewSlide");
+      previewSlide.style.display = "none";
+      // Remove the initial src to ensure it's completely blank
+      previewSlide.src = "";
+    }
+
+    function playNextSong() {
+      if (!isPreviewPlaying) return;
+      
+      const audioElements = Array.from(document.querySelectorAll('#music audio'));
+      if (audioElements.length === 0) return;
+      
+      const previewAudio = document.getElementById("previewAudio");
+      previewAudio.src = audioElements[currentSongIndex].src;
+      document.getElementById("current-track").textContent = 
+        audioElements[currentSongIndex].getAttribute("data-title");
+      
+      previewAudio.play();
+      previewAudio.onended = () => {
+        currentSongIndex = (currentSongIndex + 1) % audioElements.length;
+        playNextSong();
+      };
+    }
+
     function startPreview() {
       if (!isPreviewPlaying) {
         isPreviewPlaying = true;
@@ -327,33 +356,24 @@
       }
     }
 
-    function playNextSong() {
-      if (!isPreviewPlaying) return;
-      
+    function stopPreview() {
+      isPreviewPlaying = false;
       const previewAudio = document.getElementById("previewAudio");
-      const audioElements = document.querySelectorAll('#playlist audio');
-      
-      if (currentSongIndex >= audioElements.length) {
-        currentSongIndex = 0; // Reset to first song if we've played all songs
-      }
-      
-      const currentSong = audioElements[currentSongIndex];
-      previewAudio.src = currentSong.src;
-      document.getElementById("current-track").textContent = currentSong.getAttribute("data-title");
-      
-      previewAudio.play();
-      previewAudio.onended = () => {
-        currentSongIndex++;
-        playNextSong(); // Play the next song when current one ends
-      };
+      previewAudio.pause();
+      previewAudio.currentTime = 0;
+      clearInterval(previewSlideshowInterval);
+      document.getElementById("current-track").textContent = "-";
+      document.getElementById("previewControl").textContent = "Start Preview";
+      // Clear the preview image
+      const previewSlide = document.getElementById("previewSlide");
+      previewSlide.style.display = "none";
+      previewSlide.src = "";
     }
 
     function downloadAsVideo() {
       alert('Video download feature is not implemented yet');
     }
 
-    // Initial setup
-    initializePreview();
     updateAllDisplays();
   </script>
 </body>
