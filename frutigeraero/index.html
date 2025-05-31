@@ -406,3 +406,141 @@
   </script>
 </body>
 </html>
+
+<!-- New Image List Section (will be added to #images tab) -->
+<div class="image-list-container">
+  <div class="media-list">
+    <!-- Each image item will follow this structure -->
+    .media-list-container {
+      max-width: 600px;
+      margin: 20px auto;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 15px;
+      padding: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .media-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      margin: 5px 0;
+      background: linear-gradient(180deg, #ffffff, #b2ebf2);
+      border-radius: 10px;
+      transition: transform 0.2s;
+    }
+    
+    .media-controls {
+      display: flex;
+      gap: 5px;
+      margin-right: 10px;
+    }
+    
+    .media-controls button {
+      padding: 5px 10px;
+      background: linear-gradient(180deg, #00e5ff, #009688);
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    
+    .media-controls button:hover {
+      transform: scale(1.1);
+    }
+    
+    .media-name {
+      flex-grow: 1;
+      color: #0d47a1;
+    }
+    
+    .remove-item {
+      padding: 5px 10px;
+      background: #ff5252;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    
+    .remove-item:hover {
+      transform: scale(1.1);
+    }
+    
+    .import-container {
+      margin-top: 15px;
+      text-align: center;
+    }
+    
+    .import-container button {
+      padding: 10px 20px;
+      background: linear-gradient(180deg, #00e5ff, #009688);
+      border: none;
+      color: white;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    .delete-popup {
+      position: fixed;
+      top: -60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 25px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: top 0.3s ease-in-out;
+      z-index: 1000;
+    }
+    
+    .delete-popup.show {
+      top: 20px;
+    }
+    
+    #undoDelete {
+      padding: 5px 15px;
+      background: #00e5ff;
+      border: none;
+      color: white;
+      border-radius: 15px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </div>
+  <div class="import-container">
+    <input type="file" id="imageInput" accept=".png,.jpg,.jpeg,.webp" multiple style="display: none">
+    <button onclick="document.getElementById('imageInput').click()">+ Add your own images!</button>
+  </div>
+</div>
+
+<!-- New Music List Section (will replace current #music tab content) -->
+<div class="music-list-container">
+  <div class="media-list">
+    <!-- Each song item will follow this structure -->
+    <div class="media-item" data-index="0">
+      <div class="media-controls">
+        <button class="move-up">↑</button>
+        <button class="move-down">↓</button>
+      </div>
+      <span class="media-name">Song Name</span>
+      <button class="remove-item">×</button>
+    </div>
+  </div>
+  <div class="import-container">
+    <input type="file" id="musicInput" accept=".mp3,.wav,.ogg" multiple style="display: none">
+    <button onclick="document.getElementById('musicInput').click()">+ Add your own songs!</button>
+  </div>
+</div>
+
+<!-- Deletion Popup -->
+<div id="deletePopup" class="delete-popup">
+  <span id="deleteMessage"></span>
+  <button id="undoDelete">Undo</button>
+</div>
