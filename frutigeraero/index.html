@@ -182,6 +182,7 @@
     </div>
   </div>
 
+  <!-- Replace the content in the images tab -->
   <div id="images" class="tab-content">
     <div class="image-square-wrapper">
       <img id="imageSlide" class="slideshow" src="../assets/images/Vibes.jpeg" alt="Image Slide">
@@ -195,17 +196,36 @@
       <input type="range" id="intervalSlider" min="1" max="20" value="5" oninput="updateInterval(this.value)">
       <div id="intervalValue">5 seconds</div>
     </div>
+    
+    <!-- New image list section -->
+    <div class="media-list-container">
+      <div class="media-list" id="imageList">
+        <!-- Image items will be populated here by JavaScript -->
+      </div>
+      <div class="import-container">
+        <input type="file" id="imageInput" accept=".png,.jpg,.jpeg,.webp" multiple style="display: none">
+        <button onclick="document.getElementById('imageInput').click()">+ Add your own images!</button>
+      </div>
+    </div>
   </div>
-
+  
+  <!-- Replace the content in the music tab -->
   <div id="music" class="tab-content">
-    <div id="playlist">
-      <audio data-title="Mii Editor" src="../assets/music/Mii Editor - Nintendo.mp3"></audio>
-      <audio data-title="LEASE" src="../assets/music/takeshi abo - LEASE.mp3"></audio>
-      <audio data-title="Lotus Waters" src="../assets/music/yume 2kki - lotus waters.mp3"></audio>
+    <div class="media-list-container">
+      <div class="media-list" id="musicList">
+        <!-- Music items will be populated here by JavaScript -->
+      </div>
+      <div class="import-container">
+        <input type="file" id="musicInput" accept=".mp3,.wav,.ogg" multiple style="display: none">
+        <button onclick="document.getElementById('musicInput').click()">+ Add your own songs!</button>
+      </div>
+    </div>
+    <div id="playlist" style="display: none;">
+      <!-- Existing audio elements will be here -->
     </div>
     <div id="now-playing">Now Playing: <span id="current-track">-</span></div>
   </div>
-
+  
   <a href="../" class="back">← Back to Home</a>
 
   <script>
@@ -411,108 +431,101 @@
 <div class="image-list-container">
   <div class="media-list">
     <!-- Each image item will follow this structure -->
-    .media-list-container {
-      max-width: 600px;
-      margin: 20px auto;
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 15px;
-      padding: 15px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
+    <style>
+      /* Add these styles in the existing <style> section at the top */
+      .media-list-container {
+        max-width: 600px;
+        margin: 20px auto;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        padding: 15px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      }
     
-    .media-item {
-      display: flex;
-      align-items: center;
-      padding: 10px;
-      margin: 5px 0;
-      background: linear-gradient(180deg, #ffffff, #b2ebf2);
-      border-radius: 10px;
-      transition: transform 0.2s;
-    }
+      .media-item {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        margin: 5px 0;
+        background: linear-gradient(180deg, #ffffff, #b2ebf2);
+        border-radius: 10px;
+        transition: transform 0.2s;
+      }
     
-    .media-controls {
-      display: flex;
-      gap: 5px;
-      margin-right: 10px;
-    }
+      .media-controls {
+        display: flex;
+        gap: 5px;
+        margin-right: 10px;
+      }
     
-    .media-controls button {
-      padding: 5px 10px;
-      background: linear-gradient(180deg, #00e5ff, #009688);
-      border: none;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: transform 0.1s;
-    }
+      .media-controls button,
+      .remove-item {
+        padding: 5px 10px;
+        border: none;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: transform 0.1s;
+      }
     
-    .media-controls button:hover {
-      transform: scale(1.1);
-    }
+      .media-controls button {
+        background: linear-gradient(180deg, #00e5ff, #009688);
+      }
     
-    .media-name {
-      flex-grow: 1;
-      color: #0d47a1;
-    }
+      .remove-item {
+        background: #ff5252;
+      }
     
-    .remove-item {
-      padding: 5px 10px;
-      background: #ff5252;
-      border: none;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: transform 0.1s;
-    }
+      .media-controls button:hover,
+      .remove-item:hover {
+        transform: scale(1.1);
+      }
     
-    .remove-item:hover {
-      transform: scale(1.1);
-    }
+      .import-container {
+        margin-top: 15px;
+        text-align: center;
+      }
     
-    .import-container {
-      margin-top: 15px;
-      text-align: center;
-    }
+      .import-container button {
+        padding: 10px 20px;
+        background: linear-gradient(180deg, #00e5ff, #009688);
+        border: none;
+        color: white;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: bold;
+      }
     
-    .import-container button {
-      padding: 10px 20px;
-      background: linear-gradient(180deg, #00e5ff, #009688);
-      border: none;
-      color: white;
-      border-radius: 20px;
-      cursor: pointer;
-      font-weight: bold;
-    }
+      .delete-popup {
+        position: fixed;
+        top: -60px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 25px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: top 0.3s ease-in-out;
+        z-index: 1000;
+      }
     
-    .delete-popup {
-      position: fixed;
-      top: -60px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 15px 25px;
-      border-radius: 25px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      transition: top 0.3s ease-in-out;
-      z-index: 1000;
-    }
+      .delete-popup.show {
+        top: 20px;
+      }
     
-    .delete-popup.show {
-      top: 20px;
-    }
-    
-    #undoDelete {
-      padding: 5px 15px;
-      background: #00e5ff;
-      border: none;
-      color: white;
-      border-radius: 15px;
-      cursor: pointer;
-      font-weight: bold;
-    }
+      #undoDelete {
+        padding: 5px 15px;
+        background: #00e5ff;
+        border: none;
+        color: white;
+        border-radius: 15px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+    </style>
   </div>
   <div class="import-container">
     <input type="file" id="imageInput" accept=".png,.jpg,.jpeg,.webp" multiple style="display: none">
