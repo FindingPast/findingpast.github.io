@@ -168,7 +168,7 @@
     <div id="previewContainer">
       <img id="previewSlide" src="../assets/images/Vibes.jpeg" alt="Preview Slideshow">
     </div>
-    <audio id="previewAudio" loop>
+    <audio id="previewAudio">
       <source src="../assets/music/Mii Editor - Nintendo.mp3" type="audio/mp3">
     </audio>
     <div class="preview-controls">
@@ -218,9 +218,31 @@
     let intervalTime = 5000;
     let previewSlideshowInterval;
     let imageSlideshowInterval;
+    // Update the playlist initialization
     let currentSongIndex = 0;
     let isPreviewPlaying = false;
-    const playlist = Array.from(document.querySelectorAll('#playlist audio'));
+    // Move playlist initialization to a function to ensure DOM is loaded
+    function initializePlaylist() {
+      return Array.from(document.querySelectorAll('#playlist audio'));
+    }
+
+    function playNextSong() {
+      if (!isPreviewPlaying) return;
+      
+      const playlist = initializePlaylist();
+      if (playlist.length === 0) return;
+      
+      const previewAudio = document.getElementById("previewAudio");
+      previewAudio.src = playlist[currentSongIndex].src;
+      document.getElementById("current-track").textContent = 
+        playlist[currentSongIndex].getAttribute("data-title");
+      
+      previewAudio.play();
+      previewAudio.onended = () => {
+        currentSongIndex = (currentSongIndex + 1) % playlist.length;
+        playNextSong();
+      };
+    }
 
     function switchTab(tab) {
       tabs.forEach(t => {
