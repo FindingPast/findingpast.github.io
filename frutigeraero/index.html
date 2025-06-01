@@ -159,13 +159,37 @@
       z-index: 1000;
     }
 
-    .song-list {
+    .image-list {
       max-width: 600px;
       margin: 20px auto;
       background: rgba(255, 255, 255, 0.8);
       border-radius: 15px;
       padding: 15px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .image-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      margin: 8px 0;
+      background: linear-gradient(180deg, #ffffff, #e1f5fe);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .image-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .image-item img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-right: 10px;
     }
 
     .song-item {
@@ -349,6 +373,13 @@
       <input type="range" id="intervalSlider" min="1" max="20" value="5" oninput="updateInterval(this.value)">
       <div id="intervalValue">5 seconds</div>
     </div>
+    <div class="image-list">
+      <div id="image-items-container"></div>
+      <button id="import-button" onclick="document.getElementById('image-file-input').click()">
+        Import Images
+      </button>
+      <input type="file" id="image-file-input" accept=".jpg,.jpeg,.png,.gif" multiple style="display: none" onchange="handleImageSelect(event)">
+    </div>
   </div>
 
   <div id="music" class="tab-content">
@@ -404,6 +435,7 @@
     // Initialize when DOM is loaded
     document.addEventListener('DOMContentLoaded', () => {
       renderSongList();
+      renderImageList();
       initializePreview();
       updateAllDisplays();
     });
@@ -671,6 +703,111 @@
       previewSlide.style.display = "none";
       previewSlide.src = "";
     }
+
+    function renderImageList() {
+      const container = document.getElementById('image-items-container');
+      container.innerHTML = imageList.map((image, index) => `
+        <div class="image-item" data-index="${index}">
+          <img src="${image.src}" alt="${image.title}">
+          <div class="song-controls">
+            <button onclick="moveImage(${index}, -1)" ${index === 0 ? 'disabled' : ''}>&uarr;</button>
+            <button onclick="moveImage(${index}, 1)" ${index === imageList.length - 1 ? 'disabled' : ''}>&darr;</button>
+          </div>
+          <div class="song-name">${image.title}</div>
+          <button class="song-controls delete-button" onclick="deleteImage(${index})">×</button>
+        </div>
+      `).join('');
+      
+      // Update the imageUrls array to match the current list
+      imageUrls = imageList.map(image => image.src);
+      updateAllDisplays();
+    }
+
+    function handleImageSelect(event) {
+      const files = event.target.files;
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      const maxSize = 5 * 1024 * 1024; // 5MB size limit
+
+      for (const file of files) {
+        if (!allowedTypes.includes(file.type)) {
+          alert(`Invalid file type: ${file.name}\nAllowed types: JPG, JPEG, PNG, GIF`);
+          continue;
+        }
+
+        if (file.size > maxSize) {
+          alert(`File too large: ${file.name}\nMaximum size: 5MB`);
+          continue;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const title = file.name.replace(/\.[^/.]+$/, "");
+          imageList.push({
+            title: title,
+            src: e.target.result
+          });
+          renderImageList();
+        };
+        reader.readAsDataURL(file);
+      }
+      event.target.value = '';
+    }
+
+    function moveImage(index, direction) {
+      const newIndex = index + direction;
+      if (newIndex >= 0 && newIndex < imageList.length) {
+        const [removed] = imageList.splice(index, 1);
+        imageList.splice(newIndex, 0, removed);
+        renderImageList();
+      }
+    }
+
+    function deleteImage(index) {
+      deletedImage = imageList[index];
+      imageList.splice(index, 1);
+      renderImageList();
+      showUndoNotification(`You deleted "${deletedImage.title}"`);
+    }
+
+    // Modify the existing undoDelete function to handle both songs and images
+    function undoDelete() {
+      if (deletedSong) {
+        songList.push(deletedSong);
+        renderSongList();
+        hideUndoNotification();
+        deletedSong = null;
+      } else if (deletedImage) {
+        imageList.push(deletedImage);
+        renderImageList();
+        hideUndoNotification();
+        deletedImage = null;
+      }
+    }
   </script>
 </body>
 </html>
+
+    // Add to global variables section
+    let imageList = [
+      {
+        title: "Vibes",
+        src: "../assets/images/Vibes.jpeg"
+      },
+      {
+        title: "Open",
+        src: "../assets/images/Open.jpeg"
+      },
+      {
+        title: "Life",
+        src: "../assets/images/Life.jpeg"
+      },
+      {
+        title: "Gallery",
+        src: "../assets/images/Gallery.jpeg"
+      },
+      {
+        title: "Frutiger Eco",
+        src: "../assets/images/Frutiger Eco.jpeg"
+      }
+    ];
+    let deletedImage = null;
