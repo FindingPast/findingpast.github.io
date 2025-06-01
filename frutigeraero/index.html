@@ -384,13 +384,26 @@
     let imageSlideshowInterval;
     let currentSongIndex = 0;
     let isPreviewPlaying = false;
-    let songList = [];
+    let songList = [
+      {
+        title: "Mii Editor - Nintendo",
+        src: "../assets/music/Mii Editor - Nintendo.mp3"
+      },
+      {
+        title: "takeshi abo - LEASE",
+        src: "../assets/music/takeshi abo - LEASE.mp3"
+      },
+      {
+        title: "yume 2kki - lotus waters",
+        src: "../assets/music/yume 2kki - lotus waters.mp3"
+      }
+    ];
     let deletedSong = null;
     let undoTimeout = null;
 
     // Initialize when DOM is loaded
     document.addEventListener('DOMContentLoaded', () => {
-      initializeSongList();
+      renderSongList();
       initializePreview();
       updateAllDisplays();
     });
