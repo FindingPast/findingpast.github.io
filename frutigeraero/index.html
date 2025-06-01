@@ -162,40 +162,93 @@
     .song-list {
       max-width: 600px;
       margin: 20px auto;
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.8);
       border-radius: 15px;
       padding: 15px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
 
     .song-item {
       display: flex;
       align-items: center;
       padding: 10px;
-      margin: 5px 0;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      transition: transform 0.2s ease;
+      margin: 8px 0;
+      background: linear-gradient(180deg, #ffffff, #e1f5fe);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .song-controls {
-      display: flex;
-      gap: 5px;
+    .song-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     }
 
     .song-controls button {
       border: none;
-      background: #f0f0f0;
-      padding: 5px 10px;
-      border-radius: 4px;
+      background: linear-gradient(180deg, #00e5ff, #009688);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 20px;
       cursor: pointer;
-      transition: background 0.2s ease;
+      transition: background 0.2s ease, transform 0.1s ease;
+    }
+
+    .song-controls button:hover:not([disabled]) {
+      background: linear-gradient(180deg, #00b8d4, #00796b);
+      transform: scale(1.05);
     }
 
     .song-controls button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+      background: #b0bec5;
+    }
+
+    .delete-button {
+      color: #e53935;
+      font-size: 24px;
+      background: none !important;
+      padding: 4px 12px !important;
+    }
+
+    .delete-button:hover {
+      color: #c62828;
+    }
+
+    #import-button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      background: linear-gradient(180deg, #00e5ff, #009688);
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s ease, transform 0.1s ease;
+    }
+
+    #import-button:hover {
+      background: linear-gradient(180deg, #00b8d4, #00796b);
+      transform: scale(1.02);
+    }
+
+    #undo-notification {
+      position: fixed;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg, #424242, #212121);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 25px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: top 0.3s ease;
+      z-index: 1000;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
 
     .song-name {
@@ -544,7 +597,23 @@
         previewSlide.src = imageUrls[0];
         
         document.getElementById("previewControl").textContent = "Stop Preview";
-        playNextSong();
+        
+        // Update preview audio source from playlist
+        const audioElements = Array.from(document.querySelectorAll('#playlist audio'));
+        if (audioElements.length > 0) {
+          const previewAudio = document.getElementById("previewAudio");
+          previewAudio.src = audioElements[0].src;
+          previewAudio.play().catch(error => {
+            console.error("Error playing audio:", error);
+          });
+          
+          previewAudio.onended = () => {
+            currentSongIndex = (currentSongIndex + 1) % audioElements.length;
+            previewAudio.src = audioElements[currentSongIndex].src;
+            previewAudio.play();
+          };
+        }
+        
         startSlideshow();
       } else {
         stopPreview();
