@@ -402,13 +402,7 @@
   <script>
     // Global variables
     const tabs = ['preview', 'images', 'music'];
-    const imageUrls = [
-      "../assets/images/Vibes.jpeg",
-      "../assets/images/Open.jpeg",
-      "../assets/images/Life.jpeg",
-      "../assets/images/Gallery.jpeg",
-      "../assets/images/Frutiger Eco.jpeg"
-    ];
+    const imageUrls = [];
     let currentImageIndex = 0;
     let intervalTime = 5000;
     let previewSlideshowInterval;
@@ -431,28 +425,7 @@
     ];
     let deletedSong = null;
     let undoTimeout = null;
-    let imageList = [
-      {
-        title: "Vibes",
-        src: "../assets/images/Vibes.jpeg"
-      },
-      {
-        title: "Open",
-        src: "../assets/images/Open.jpeg"
-      },
-      {
-        title: "Life",
-        src: "../assets/images/Life.jpeg"
-      },
-      {
-        title: "Gallery",
-        src: "../assets/images/Gallery.jpeg"
-      },
-      {
-        title: "Frutiger Eco",
-        src: "../assets/images/Frutiger Eco.jpeg"
-      }
-    ];
+    let imageList = [];
     let deletedImage = null;
 
     // Initialize when DOM is loaded
@@ -770,6 +743,10 @@
             src: e.target.result
           });
           renderImageList();
+          // Restart slideshow if preview is playing
+          if (isPreviewPlaying) {
+            startSlideshow();
+          }
         };
         reader.readAsDataURL(file);
       }
@@ -782,6 +759,10 @@
         const [removed] = imageList.splice(index, 1);
         imageList.splice(newIndex, 0, removed);
         renderImageList();
+        // Restart slideshow if preview is playing
+        if (isPreviewPlaying) {
+          startSlideshow();
+        }
       }
     }
 
