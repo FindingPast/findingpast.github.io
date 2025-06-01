@@ -626,12 +626,24 @@
       previewAudio.pause();
       previewAudio.currentTime = 0;
       clearInterval(previewSlideshowInterval);
-      document.getElementById("current-track").textContent = "-";
+      
+      // Reset the button text first
       document.getElementById("previewControl").textContent = "Start Preview";
       
+      // Clear the current track display if it exists
+      const currentTrack = document.getElementById("current-track");
+      if (currentTrack) {
+        currentTrack.textContent = "-";
+      }
+      
+      // Hide and clear the preview slide
       const previewSlide = document.getElementById("previewSlide");
       previewSlide.style.display = "none";
       previewSlide.src = "";
+      
+      // Reset indices
+      currentImageIndex = 0;
+      currentSongIndex = 0;
     }
 
     function downloadAsVideo() {
