@@ -402,7 +402,13 @@
   <script>
     // Global variables
     const tabs = ['preview', 'images', 'music'];
-    const imageUrls = [];
+    const imageUrls = [
+      "../assets/images/Vibes.jpeg",
+      "../assets/images/Open.jpeg",
+      "../assets/images/Life.jpeg",
+      "../assets/images/Gallery.jpeg",
+      "../assets/images/Frutiger Eco.jpeg"
+    ];
     let currentImageIndex = 0;
     let intervalTime = 5000;
     let previewSlideshowInterval;
@@ -425,7 +431,28 @@
     ];
     let deletedSong = null;
     let undoTimeout = null;
-    let imageList = [];
+    let imageList = [
+      {
+        title: "Vibes",
+        src: "../assets/images/Vibes.jpeg"
+      },
+      {
+        title: "Open",
+        src: "../assets/images/Open.jpeg"
+      },
+      {
+        title: "Life",
+        src: "../assets/images/Life.jpeg"
+      },
+      {
+        title: "Gallery",
+        src: "../assets/images/Gallery.jpeg"
+      },
+      {
+        title: "Frutiger Eco",
+        src: "../assets/images/Frutiger Eco.jpeg"
+      }
+    ];
     let deletedImage = null;
 
     // Initialize when DOM is loaded
@@ -694,10 +721,12 @@
 
     function initializePreview() {
       const previewAudio = document.getElementById("previewAudio");
-      previewAudio.volume = 0.5;
       const previewSlide = document.getElementById("previewSlide");
+      previewAudio.volume = 0.5;
       previewSlide.style.display = "none";
       previewSlide.src = "";
+      currentImageIndex = 0;
+      updateAllDisplays();
     }
 
     function renderImageList() {
@@ -714,9 +743,24 @@
         </div>
       `).join('');
       
-      // Update the imageUrls array to match the current list
+      // Update the imageUrls array and refresh displays
       imageUrls = imageList.map(image => image.src);
+      currentImageIndex = Math.min(currentImageIndex, imageUrls.length - 1);
       updateAllDisplays();
+      if (isPreviewPlaying) {
+        startSlideshow();
+      }
+    }
+
+    function updateAllDisplays() {
+      if (imageUrls.length === 0) {
+        document.getElementById("imageSlide").src = "";
+        document.getElementById("previewSlide").src = "";
+        return;
+      }
+      const current = imageUrls[currentImageIndex];
+      document.getElementById("imageSlide").src = current;
+      document.getElementById("previewSlide").src = current;
     }
 
     function handleImageSelect(event) {
@@ -743,10 +787,6 @@
             src: e.target.result
           });
           renderImageList();
-          // Restart slideshow if preview is playing
-          if (isPreviewPlaying) {
-            startSlideshow();
-          }
         };
         reader.readAsDataURL(file);
       }
@@ -759,10 +799,6 @@
         const [removed] = imageList.splice(index, 1);
         imageList.splice(newIndex, 0, removed);
         renderImageList();
-        // Restart slideshow if preview is playing
-        if (isPreviewPlaying) {
-          startSlideshow();
-        }
       }
     }
 
