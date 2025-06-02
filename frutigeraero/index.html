@@ -676,6 +676,15 @@
       };
     }
 
+    // Add to global variables section
+    var endAfterImages = true; // Default to ending after all images
+    
+    function toggleEndCondition() {
+      endAfterImages = !endAfterImages;
+      document.getElementById('endConditionToggle').textContent = endAfterImages ? 'Images' : 'Songs';
+    }
+    
+    // Modify the startPreview function to check end condition
     function startPreview() {
       if (!isPreviewPlaying) {
         isPreviewPlaying = true;
@@ -698,8 +707,12 @@
           
           previewAudio.onended = () => {
             currentSongIndex = (currentSongIndex + 1) % audioElements.length;
-            previewAudio.src = audioElements[currentSongIndex].src;
-            previewAudio.play();
+            if (!endAfterImages && currentSongIndex === 0) {
+              fadeOutAndStop();
+            } else {
+              previewAudio.src = audioElements[currentSongIndex].src;
+              previewAudio.play();
+            }
           };
         }
         
@@ -708,34 +721,53 @@
         stopPreview();
       }
     }
-
-    function stopPreview() {
-      isPreviewPlaying = false;
+    
+    // Add the fadeOutAndStop function
+    function fadeOutAndStop() {
       const previewAudio = document.getElementById("previewAudio");
-      previewAudio.pause();
-      previewAudio.currentTime = 0;
-      clearInterval(previewSlideshowInterval);
+      const fadeOutDuration = 3000; // 3 seconds
+      const fadeOutInterval = 50; // Update every 50ms
+      const steps = fadeOutDuration / fadeOutInterval;
+      const volumeStep = previewAudio.volume / steps;
       
-      // Reset the button text first
-      document.getElementById("previewControl").textContent = "Start Preview";
-      
-      // Clear the current track display if it exists
-      const currentTrack = document.getElementById("current-track");
-      if (currentTrack) {
-        currentTrack.textContent = "-";
-      }
-      
-      // Hide and clear the preview slide
-      const previewSlide = document.getElementById("previewSlide");
-      previewSlide.style.display = "none";
-      previewSlide.src = "";
-      
-      // Reset indices
-      currentImageIndex = 0;
-      currentSongIndex = 0;
+      let currentStep = 0;
+      const fadeInterval = setInterval(() => {
+        currentStep++;
+        previewAudio.volume = Math.max(0, previewAudio.volume - volumeStep);
+        
+        if (currentStep >= steps) {
+          clearInterval(fadeInterval);
+          stopPreview();
+        }
+      }, fadeOutInterval);
     }
-
+    
+    // Modify the startSlideshow function to check end condition
+    function startSlideshow() {
+      if (document.getElementById('images').classList.contains('active')) {
+        clearInterval(imageSlideshowInterval);
+        imageSlideshowInterval = setInterval(() => {
+          currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+          updateAllDisplays();
+        }, intervalTime);
+      } else if (isPreviewPlaying) {
+        clearInterval(previewSlideshowInterval);
+        previewSlideshowInterval = setInterval(() => {
+          currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+          if (endAfterImages && currentImageIndex === 0) {
+            fadeOutAndStop();
+          } else {
+            updateAllDisplays();
+          }
+        }, intervalTime);
+      }
+    }
+    
+    // Modify downloadAsVideo to stop preview
     function downloadAsVideo() {
+      if (isPreviewPlaying) {
+        stopPreview();
+      }
       alert('Video download feature is not implemented yet');
     }
 
@@ -884,3 +916,20 @@
   </script>
 </body>
 </html>
+
+.preview-end-control {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.preview-end-control button {
+  padding: 5px 15px;
+  background: #00796b;
+  color: white;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+}
