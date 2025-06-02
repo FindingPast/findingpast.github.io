@@ -598,9 +598,26 @@
     }
 
     function updateAllDisplays() {
+      if (imageUrls.length === 0) {
+        const imageSlide = document.getElementById("imageSlide");
+        const previewSlide = document.getElementById("previewSlide");
+        if (imageSlide) imageSlide.src = "";
+        if (previewSlide) {
+          previewSlide.src = "";
+          previewSlide.style.display = "none";
+        }
+        return;
+      }
+      
       const current = imageUrls[currentImageIndex];
-      document.getElementById("imageSlide").src = current;
-      document.getElementById("previewSlide").src = current;
+      const imageSlide = document.getElementById("imageSlide");
+      const previewSlide = document.getElementById("previewSlide");
+      
+      if (imageSlide) imageSlide.src = current;
+      if (previewSlide && isPreviewPlaying) {
+        previewSlide.src = current;
+        previewSlide.style.display = "block";
+      }
     }
 
     function startSlideshow() {
@@ -723,16 +740,20 @@
     }
 
     // Update the global variables section
-    let imageUrls = [];
-    let currentImageIndex = 0;
-    let intervalTime = 5000;
-    let previewSlideshowInterval;
-    let imageSlideshowInterval;
-    let currentSongIndex = 0;
-    let isPreviewPlaying = false;
+    // Remove these duplicate declarations
+    // let imageUrls = [];
+    // let currentImageIndex = 0;
+    // let intervalTime = 5000;
+    // let previewSlideshowInterval;
+    // let imageSlideshowInterval;
+    // let currentSongIndex = 0;
+    // let isPreviewPlaying = false;
 
     // Initialize when DOM is loaded
     document.addEventListener('DOMContentLoaded', () => {
+      // Set initial tab
+      switchTab('preview');
+      
       // Initialize imageUrls from imageList
       imageUrls = imageList.map(image => image.src);
       renderSongList();
@@ -746,10 +767,8 @@
       const previewSlide = document.getElementById("previewSlide");
       previewAudio.volume = 0.5;
       previewSlide.style.display = "none";
-      // Set initial image from imageList if available
-      if (imageList.length > 0) {
-        previewSlide.src = imageList[0].src;
-      }
+      previewSlide.src = ""; // Clear the source
+      isPreviewPlaying = false; // Ensure preview is not playing by default
     }
 
     function moveImage(index, direction) {
