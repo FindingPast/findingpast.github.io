@@ -402,20 +402,23 @@
   <script>
     // Global variables
     const tabs = ['preview', 'images', 'music'];
-    const imageUrls = [
+    
+    // Change this from const to var
+    var imageUrls = [
       "../assets/images/Vibes.jpeg",
       "../assets/images/Open.jpeg",
       "../assets/images/Life.jpeg",
       "../assets/images/Gallery.jpeg",
       "../assets/images/Frutiger Eco.jpeg"
     ];
-    let currentImageIndex = 0;
-    let intervalTime = 5000;
-    let previewSlideshowInterval;
-    let imageSlideshowInterval;
-    let currentSongIndex = 0;
-    let isPreviewPlaying = false;
-    let songList = [
+    
+    var currentImageIndex = 0;
+    var intervalTime = 5000;
+    var previewSlideshowInterval;
+    var imageSlideshowInterval;
+    var currentSongIndex = 0;
+    var isPreviewPlaying = false;
+    var songList = [
       {
         title: "Mii Editor - Nintendo",
         src: "../assets/music/Mii Editor - Nintendo.mp3"
@@ -429,9 +432,9 @@
         src: "../assets/music/yume 2kki - lotus waters.mp3"
       }
     ];
-    let deletedSong = null;
-    let undoTimeout = null;
-    let imageList = [
+    var deletedSong = null;
+    var undoTimeout = null;
+    var imageList = [
       {
         title: "Vibes",
         src: "../assets/images/Vibes.jpeg"
@@ -453,7 +456,7 @@
         src: "../assets/images/Frutiger Eco.jpeg"
       }
     ];
-    let deletedImage = null;
+    var deletedImage = null;
 
     // Initialize when DOM is loaded
     document.addEventListener('DOMContentLoaded', () => {
@@ -719,14 +722,50 @@
       alert('Video download feature is not implemented yet');
     }
 
+    // Update the global variables section
+    let imageUrls = [];
+    let currentImageIndex = 0;
+    let intervalTime = 5000;
+    let previewSlideshowInterval;
+    let imageSlideshowInterval;
+    let currentSongIndex = 0;
+    let isPreviewPlaying = false;
+
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize imageUrls from imageList
+      imageUrls = imageList.map(image => image.src);
+      renderSongList();
+      renderImageList();
+      initializePreview();
+      updateAllDisplays();
+    });
+
     function initializePreview() {
       const previewAudio = document.getElementById("previewAudio");
       const previewSlide = document.getElementById("previewSlide");
       previewAudio.volume = 0.5;
       previewSlide.style.display = "none";
-      previewSlide.src = "";
-      currentImageIndex = 0;
-      updateAllDisplays();
+      // Set initial image from imageList if available
+      if (imageList.length > 0) {
+        previewSlide.src = imageList[0].src;
+      }
+    }
+
+    function moveImage(index, direction) {
+      const newIndex = index + direction;
+      if (newIndex >= 0 && newIndex < imageList.length) {
+        const [removed] = imageList.splice(index, 1);
+        imageList.splice(newIndex, 0, removed);
+        renderImageList();
+        // Update currentImageIndex if it was the moved image
+        if (currentImageIndex === index) {
+          currentImageIndex = newIndex;
+        } else if (currentImageIndex === newIndex) {
+          currentImageIndex = index;
+        }
+        updateAllDisplays();
+      }
     }
 
     function renderImageList() {
@@ -743,7 +782,7 @@
         </div>
       `).join('');
       
-      // Update the imageUrls array and refresh displays
+      // Update instead of redeclaring
       imageUrls = imageList.map(image => image.src);
       currentImageIndex = Math.min(currentImageIndex, imageUrls.length - 1);
       updateAllDisplays();
@@ -753,14 +792,14 @@
     }
 
     function updateAllDisplays() {
-      if (imageUrls.length === 0) {
-        document.getElementById("imageSlide").src = "";
-        document.getElementById("previewSlide").src = "";
-        return;
-      }
+      if (imageUrls.length === 0) return;
+      
       const current = imageUrls[currentImageIndex];
-      document.getElementById("imageSlide").src = current;
-      document.getElementById("previewSlide").src = current;
+      const imageSlide = document.getElementById("imageSlide");
+      const previewSlide = document.getElementById("previewSlide");
+      
+      if (imageSlide) imageSlide.src = current;
+      if (previewSlide) previewSlide.src = current;
     }
 
     function handleImageSelect(event) {
