@@ -604,6 +604,9 @@
       }
     }
 
+    // Add to global variables section
+    var deletedImage = null;
+
     function deleteImage(index) {
       deletedImage = imageList[index];
       imageList.splice(index, 1);
@@ -611,6 +614,7 @@
       showUndoNotification(`You deleted "${deletedImage.title}"`);
     }
 
+    // Modify the existing undoDelete function to handle both songs and images
     function undoDelete() {
       if (deletedSong) {
         songList.push(deletedSong);
