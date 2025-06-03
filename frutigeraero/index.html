@@ -385,6 +385,22 @@
 
     // Initialize when DOM is loaded
     document.addEventListener('DOMContentLoaded', () => {
+      // Initialize default images
+      imageList = [
+        { url: '../assets/images/Frutiger Eco.jpeg', title: 'Frutiger Eco' },
+        { url: '../assets/images/Gallery.jpeg', title: 'Gallery' },
+        { url: '../assets/images/Life.jpeg', title: 'Life' },
+        { url: '../assets/images/Open.jpeg', title: 'Open' },
+        { url: '../assets/images/Vibes.jpeg', title: 'Vibes' }
+      ];
+
+      // Initialize default songs
+      songList = [
+        { url: '../assets/music/Mii Editor - Nintendo.mp3', title: 'Mii Editor - Nintendo' },
+        { url: '../assets/music/takeshi abo - LEASE.mp3', title: 'takeshi abo - LEASE' },
+        { url: '../assets/music/yume 2kki - lotus waters.mp3', title: 'yume 2kki - lotus waters' }
+      ];
+
       renderSongList();
       renderImageList();
       initializePreview();
