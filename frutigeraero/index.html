@@ -289,15 +289,37 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(178, 235, 242, 0.9));
+      padding: 15px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .preview-end-control span {
+      color: #00796b;
+      font-weight: 500;
     }
 
     .preview-end-control button {
-      padding: 5px 15px;
-      background: #00796b;
+      padding: 8px 20px;
+      background: linear-gradient(180deg, #00e5ff, #009688);
       color: white;
       border: none;
-      border-radius: 15px;
+      border-radius: 20px;
       cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .preview-end-control button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
   </style>
 </head>
