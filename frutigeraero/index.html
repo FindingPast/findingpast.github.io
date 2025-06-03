@@ -335,6 +335,23 @@
       from { transform: translate(-50%, 100%); }
       to { transform: translate(-50%, 0); }
     }
+
+    .preview-end-control {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .preview-end-control button {
+      padding: 5px 15px;
+      background: #00796b;
+      color: white;
+      border: none;
+      border-radius: 15px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -939,87 +956,92 @@
 }
 
 function stopPreview() {
-    isPreviewPlaying = false;
-    const previewAudio = document.getElementById("previewAudio");
-    const previewSlide = document.getElementById("previewSlide");
-    
-    // Stop and reset audio
-    previewAudio.pause();
-    previewAudio.currentTime = 0;
-    previewAudio.volume = 0.5; // Reset volume for next play
-    
-    // Hide preview slide
-    previewSlide.style.display = "none";
-    
-    // Clear all intervals
-    clearInterval(previewSlideshowInterval);
-    clearInterval(imageSlideshowInterval);
-    
-    // Reset button text
-    document.getElementById("previewControl").textContent = "Start Preview";
-}
-
-function switchTab(tabName) {
-    // Stop preview if switching away from preview tab
-    if (document.getElementById('preview').classList.contains('active') && tabName !== 'preview') {
-        stopPreview();
-    }
-    
-    // Update tab visibility
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    document.querySelectorAll('.tabs button').forEach(button => {
-        button.classList.remove('active');
-    });
-    
-    document.getElementById(tabName).classList.add('active');
-    document.getElementById('tab-' + tabName).classList.add('active');
-    
-    // Start slideshow if switching to images tab
-    if (tabName === 'images') {
-        startSlideshow();
-    }
-}
-
-function startPreview() {
-    if (!isPreviewPlaying) {
-        isPreviewPlaying = true;
-        currentImageIndex = 0;
-        currentSongIndex = 0;
-        const previewSlide = document.getElementById("previewSlide");
+        isPreviewPlaying = false;
         const previewAudio = document.getElementById("previewAudio");
+        const previewSlide = document.getElementById("previewSlide");
         
-        // Reset and show preview slide
-        previewSlide.style.display = "block";
-        previewSlide.src = imageUrls[0];
+        // Stop and reset audio
+        previewAudio.pause();
+        previewAudio.currentTime = 0;
+        previewAudio.volume = 0.5;
         
-        // Update button text
-        document.getElementById("previewControl").textContent = "Stop Preview";
-        
-        // Update preview audio source from playlist
-        const audioElements = Array.from(document.querySelectorAll('#playlist audio'));
-        if (audioElements.length > 0) {
-            previewAudio.src = audioElements[0].src;
-            previewAudio.volume = 0.5; // Ensure volume is set
-            previewAudio.play().catch(error => {
-                console.error("Error playing audio:", error);
-            });
-            
-            previewAudio.onended = () => {
-                currentSongIndex = (currentSongIndex + 1) % audioElements.length;
-                if (!endAfterImages && currentSongIndex === 0) {
-                    fadeOutAndStop();
-                } else {
-                    previewAudio.src = audioElements[currentSongIndex].src;
-                    previewAudio.play();
-                }
-            };
+        // Hide preview slide
+        if (previewSlide) {
+            previewSlide.style.display = "none";
+            previewSlide.src = "";
         }
         
-        // Start slideshow
-        startSlideshow();
-    } else {
-        stopPreview();
+        // Clear all intervals
+        if (previewSlideshowInterval) clearInterval(previewSlideshowInterval);
+        if (imageSlideshowInterval) clearInterval(imageSlideshowInterval);
+        
+        // Reset button text
+        const previewControl = document.getElementById("previewControl");
+        if (previewControl) previewControl.textContent = "Start Preview";
     }
-}
+
+function switchTab(tabName) {
+        const previewTab = document.getElementById('preview');
+        const wasInPreview = previewTab.classList.contains('active');
+        
+        // Update tab visibility
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelectorAll('.tabs button').forEach(button => {
+            button.classList.remove('active');
+        });
+        
+        document.getElementById(tabName).classList.add('active');
+        document.getElementById('tab-' + tabName).classList.add('active');
+        
+        // Handle preview state
+        if (wasInPreview && tabName !== 'preview' && isPreviewPlaying) {
+            stopPreview();
+        } else if (tabName === 'images') {
+            startSlideshow();
+        }
+    }
+
+function startPreview() {
+        if (!isPreviewPlaying) {
+            isPreviewPlaying = true;
+            currentImageIndex = 0;
+            currentSongIndex = 0;
+            const previewSlide = document.getElementById("previewSlide");
+            const previewAudio = document.getElementById("previewAudio");
+            
+            // Reset and show preview slide
+            if (imageUrls.length > 0) {
+                previewSlide.style.display = "block";
+                previewSlide.src = imageUrls[0];
+            }
+            
+            // Update button text
+            document.getElementById("previewControl").textContent = "Stop Preview";
+            
+            // Update preview audio source from playlist
+            const audioElements = Array.from(document.querySelectorAll('#playlist audio'));
+            if (audioElements.length > 0) {
+                previewAudio.src = audioElements[0].src;
+                previewAudio.volume = 0.5;
+                previewAudio.play().catch(error => {
+                    console.error("Error playing audio:", error);
+                });
+                
+                previewAudio.onended = () => {
+                    currentSongIndex = (currentSongIndex + 1) % audioElements.length;
+                    if (!endAfterImages && currentSongIndex === 0) {
+                        fadeOutAndStop();
+                    } else {
+                        previewAudio.src = audioElements[currentSongIndex].src;
+                        previewAudio.play();
+                    }
+                };
+            }
+            
+            startSlideshow();
+        } else {
+            stopPreview();
+        }
+    }
