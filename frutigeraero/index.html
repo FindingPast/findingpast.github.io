@@ -342,6 +342,10 @@
       <button onclick="isPreviewPlaying ? stopPreview() : startPreview()" id="previewControl">Start Preview</button>
       <button onclick="downloadAsVideo()">Download Video</button>
     </div>
+    <div class="preview-end-control">
+      <span>Preview will end after going through all</span>
+      <button onclick="toggleEndCondition()" id="endConditionToggle">Images</button>
+    </div>
   </div>
 
   <div id="images" class="tab-content">
