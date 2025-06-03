@@ -280,39 +280,6 @@
       margin: 0 10px;
     }
 
-    .delete-button {
-      color: red;
-      font-size: 20px;
-    }
-
-    /* Remove this duplicate style block */
-    /* #import-button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    } */
-
-    #undo-notification {
-      position: fixed;
-      top: -100px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #333;
-      color: white;
-      padding: 15px 25px;
-      border-radius: 5px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      transition: top 0.3s ease;
-      z-index: 1000;
-    }
-
     #undo-notification.show {
       top: 20px;
     }
@@ -419,8 +386,6 @@
   <script>
     // Global variables
     const tabs = ['preview', 'images', 'music'];
-    
-    // Change this from const to var
     var imageUrls = [
       "../assets/images/Vibes.jpeg",
       "../assets/images/Open.jpeg",
@@ -428,7 +393,6 @@
       "../assets/images/Gallery.jpeg",
       "../assets/images/Frutiger Eco.jpeg"
     ];
-    
     var currentImageIndex = 0;
     var intervalTime = 5000;
     var previewSlideshowInterval;
@@ -474,6 +438,7 @@
       }
     ];
     var deletedImage = null;
+    var endAfterImages = true;
 
     // Initialize when DOM is loaded
     document.addEventListener('DOMContentLoaded', () => {
@@ -483,13 +448,13 @@
       updateAllDisplays();
     });
 
-    function initializeSongList() {
-      const playlist = document.querySelectorAll('#playlist audio');
-      songList = Array.from(playlist).map(audio => ({
-        title: audio.getAttribute('data-title'),
-        src: audio.src
-      }));
-      renderSongList();
+    function initializePreview() {
+      const previewAudio = document.getElementById("previewAudio");
+      const previewSlide = document.getElementById("previewSlide");
+      previewAudio.volume = 0.5;
+      previewSlide.style.display = "none";
+      previewSlide.src = "";
+      isPreviewPlaying = false;
     }
 
     function renderSongList() {
@@ -517,14 +482,12 @@
       const maxSize = 20 * 1024 * 1024; // 20MB size limit
 
       for (const file of files) {
-        // Check file type
         const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
         if (!allowedTypes.includes(fileExtension)) {
           alert(`Invalid file type: ${file.name}\nAllowed types: ${allowedTypes.join(', ')}`);
           continue;
         }
 
-        // Check file size
         if (file.size > maxSize) {
           alert(`File too large: ${file.name}\nMaximum size: 20MB`);
           continue;
@@ -532,7 +495,7 @@
 
         const reader = new FileReader();
         reader.onload = function(e) {
-          const title = file.name.replace(/\.[^/.]+$/, ""); // Remove file extension
+          const title = file.name.replace(/\.[^/.]+$/, "");
           songList.push({
             title: title,
             src: e.target.result
@@ -541,7 +504,7 @@
         };
         reader.readAsDataURL(file);
       }
-      event.target.value = ''; // Reset file input
+      event.target.value = '';
     }
 
     function moveSong(index, direction) {
@@ -560,15 +523,6 @@
       showUndoNotification(`You deleted "${deletedSong.title}"`);
     }
 
-    function undoDelete() {
-      if (deletedSong) {
-        songList.push(deletedSong);
-        renderSongList();
-        hideUndoNotification();
-        deletedSong = null;
-      }
-    }
-
     function showUndoNotification(message) {
       clearTimeout(undoTimeout);
       const notification = document.getElementById('undo-notification');
@@ -585,261 +539,6 @@
       notification.classList.remove('show');
     }
 
-    function switchTab(tab) {
-      tabs.forEach(t => {
-        document.getElementById(t).classList.remove('active');
-        document.getElementById('tab-' + t).classList.remove('active');
-      });
-      document.getElementById(tab).classList.add('active');
-      document.getElementById('tab-' + tab).classList.add('active');
-
-      clearInterval(previewSlideshowInterval);
-      clearInterval(imageSlideshowInterval);
-
-      if (tab === 'images') {
-        startSlideshow();
-      }
-      
-      if (tab !== 'preview' && isPreviewPlaying) {
-        stopPreview();
-      }
-    }
-
-    function toggleFullscreen() {
-      const container = document.getElementById('previewContainer');
-      if (!document.fullscreenElement) {
-        container.requestFullscreen();
-      } else {
-        document.exitFullscreen();
-      }
-    }
-
-    function updateAllDisplays() {
-      if (imageUrls.length === 0) {
-        const imageSlide = document.getElementById("imageSlide");
-        const previewSlide = document.getElementById("previewSlide");
-        if (imageSlide) imageSlide.src = "";
-        if (previewSlide) {
-          previewSlide.src = "";
-          previewSlide.style.display = "none";
-        }
-        return;
-      }
-      
-      const current = imageUrls[currentImageIndex];
-      const imageSlide = document.getElementById("imageSlide");
-      const previewSlide = document.getElementById("previewSlide");
-      
-      if (imageSlide) imageSlide.src = current;
-      if (previewSlide && isPreviewPlaying) {
-        previewSlide.src = current;
-        previewSlide.style.display = "block";
-      }
-    }
-
-    function startSlideshow() {
-      if (document.getElementById('images').classList.contains('active')) {
-        clearInterval(imageSlideshowInterval);
-        imageSlideshowInterval = setInterval(() => {
-          currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
-          updateAllDisplays();
-        }, intervalTime);
-      } else if (isPreviewPlaying) {
-        clearInterval(previewSlideshowInterval);
-        previewSlideshowInterval = setInterval(() => {
-          currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
-          updateAllDisplays();
-        }, intervalTime);
-      }
-    }
-
-    function prevImage() {
-      clearInterval(imageSlideshowInterval);
-      currentImageIndex = (currentImageIndex - 1 + imageUrls.length) % imageUrls.length;
-      updateAllDisplays();
-      startSlideshow();
-    }
-
-    function nextImage() {
-      clearInterval(imageSlideshowInterval);
-      currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
-      updateAllDisplays();
-      startSlideshow();
-    }
-
-    function updateInterval(value) {
-      intervalTime = value * 1000;
-      document.getElementById('intervalValue').textContent = value + ' seconds';
-      if (document.getElementById('images').classList.contains('active')) {
-        startSlideshow();
-      }
-    }
-
-    function playNextSong() {
-      if (!isPreviewPlaying) return;
-      
-      const audioElements = Array.from(document.querySelectorAll('#playlist audio'));
-      if (audioElements.length === 0) return;
-      
-      const previewAudio = document.getElementById("previewAudio");
-      previewAudio.src = audioElements[currentSongIndex].src;
-      document.getElementById("current-track").textContent = 
-        audioElements[currentSongIndex].getAttribute("data-title");
-      
-      previewAudio.play();
-      previewAudio.onended = () => {
-        currentSongIndex = (currentSongIndex + 1) % audioElements.length;
-        playNextSong();
-      };
-    }
-
-    // Add to global variables section
-    var endAfterImages = true; // Default to ending after all images
-    
-    function toggleEndCondition() {
-      endAfterImages = !endAfterImages;
-      document.getElementById('endConditionToggle').textContent = endAfterImages ? 'Images' : 'Songs';
-    }
-    
-    // Modify the startPreview function to check end condition
-    function startPreview() {
-      if (!isPreviewPlaying) {
-        isPreviewPlaying = true;
-        currentImageIndex = 0;
-        currentSongIndex = 0;
-        const previewSlide = document.getElementById("previewSlide");
-        const previewAudio = document.getElementById("previewAudio");
-        
-        // Reset and show preview slide
-        previewSlide.style.display = "block";
-        previewSlide.src = imageUrls[0];
-        
-        // Update button text
-        document.getElementById("previewControl").textContent = "Stop Preview";
-        
-        // Update preview audio source from playlist
-        const audioElements = Array.from(document.querySelectorAll('#playlist audio'));
-        if (audioElements.length > 0) {
-          previewAudio.src = audioElements[0].src;
-          previewAudio.volume = 0.5; // Ensure volume is set
-          previewAudio.play().catch(error => {
-            console.error("Error playing audio:", error);
-          });
-          
-          previewAudio.onended = () => {
-            currentSongIndex = (currentSongIndex + 1) % audioElements.length;
-            if (!endAfterImages && currentSongIndex === 0) {
-              fadeOutAndStop();
-            } else {
-              previewAudio.src = audioElements[currentSongIndex].src;
-              previewAudio.play();
-            }
-          };
-        }
-        
-        startSlideshow();
-      } else {
-        stopPreview();
-      }
-    }
-    
-    // Add the fadeOutAndStop function
-    function fadeOutAndStop() {
-      const previewAudio = document.getElementById("previewAudio");
-      const fadeOutDuration = 3000; // 3 seconds
-      const fadeOutInterval = 50; // Update every 50ms
-      const steps = fadeOutDuration / fadeOutInterval;
-      const volumeStep = previewAudio.volume / steps;
-      
-      let currentStep = 0;
-      const fadeInterval = setInterval(() => {
-        currentStep++;
-        previewAudio.volume = Math.max(0, previewAudio.volume - volumeStep);
-        
-        if (currentStep >= steps) {
-          clearInterval(fadeInterval);
-          stopPreview();
-        }
-      }, fadeOutInterval);
-    }
-    
-    // Modify the startSlideshow function to check end condition
-    function startSlideshow() {
-      if (document.getElementById('images').classList.contains('active')) {
-        clearInterval(imageSlideshowInterval);
-        imageSlideshowInterval = setInterval(() => {
-          currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
-          updateAllDisplays();
-        }, intervalTime);
-      } else if (isPreviewPlaying) {
-        clearInterval(previewSlideshowInterval);
-        previewSlideshowInterval = setInterval(() => {
-          currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
-          if (endAfterImages && currentImageIndex === 0) {
-            fadeOutAndStop();
-          } else {
-            updateAllDisplays();
-          }
-        }, intervalTime);
-      }
-    }
-    
-    // Modify downloadAsVideo to stop preview
-    function downloadAsVideo() {
-      if (isPreviewPlaying) {
-        stopPreview();
-      }
-      alert('Video download feature is not implemented yet');
-    }
-
-    // Update the global variables section
-    // Remove these duplicate declarations
-    // let imageUrls = [];
-    // let currentImageIndex = 0;
-    // let intervalTime = 5000;
-    // let previewSlideshowInterval;
-    // let imageSlideshowInterval;
-    // let currentSongIndex = 0;
-    // let isPreviewPlaying = false;
-
-    // Initialize when DOM is loaded
-    document.addEventListener('DOMContentLoaded', () => {
-      // Set initial tab
-      switchTab('preview');
-      
-      // Initialize imageUrls from imageList
-      imageUrls = imageList.map(image => image.src);
-      renderSongList();
-      renderImageList();
-      initializePreview();
-      updateAllDisplays();
-    });
-
-    function initializePreview() {
-      const previewAudio = document.getElementById("previewAudio");
-      const previewSlide = document.getElementById("previewSlide");
-      previewAudio.volume = 0.5;
-      previewSlide.style.display = "none";
-      previewSlide.src = ""; // Clear the source
-      isPreviewPlaying = false; // Ensure preview is not playing by default
-    }
-
-    function moveImage(index, direction) {
-      const newIndex = index + direction;
-      if (newIndex >= 0 && newIndex < imageList.length) {
-        const [removed] = imageList.splice(index, 1);
-        imageList.splice(newIndex, 0, removed);
-        renderImageList();
-        // Update currentImageIndex if it was the moved image
-        if (currentImageIndex === index) {
-          currentImageIndex = newIndex;
-        } else if (currentImageIndex === newIndex) {
-          currentImageIndex = index;
-        }
-        updateAllDisplays();
-      }
-    }
-
     function renderImageList() {
       const container = document.getElementById('image-items-container');
       container.innerHTML = imageList.map((image, index) => `
@@ -854,24 +553,12 @@
         </div>
       `).join('');
       
-      // Update instead of redeclaring
       imageUrls = imageList.map(image => image.src);
       currentImageIndex = Math.min(currentImageIndex, imageUrls.length - 1);
       updateAllDisplays();
       if (isPreviewPlaying) {
         startSlideshow();
       }
-    }
-
-    function updateAllDisplays() {
-      if (imageUrls.length === 0) return;
-      
-      const current = imageUrls[currentImageIndex];
-      const imageSlide = document.getElementById("imageSlide");
-      const previewSlide = document.getElementById("previewSlide");
-      
-      if (imageSlide) imageSlide.src = current;
-      if (previewSlide) previewSlide.src = current;
     }
 
     function handleImageSelect(event) {
@@ -920,7 +607,6 @@
       showUndoNotification(`You deleted "${deletedImage.title}"`);
     }
 
-    // Modify the existing undoDelete function to handle both songs and images
     function undoDelete() {
       if (deletedSong) {
         songList.push(deletedSong);
@@ -934,114 +620,190 @@
         deletedImage = null;
       }
     }
+
+    function updateAllDisplays() {
+      if (imageUrls.length === 0) {
+        const imageSlide = document.getElementById("imageSlide");
+        const previewSlide = document.getElementById("previewSlide");
+        if (imageSlide) imageSlide.src = "";
+        if (previewSlide) {
+          previewSlide.src = "";
+          previewSlide.style.display = "none";
+        }
+        return;
+      }
+      
+      const current = imageUrls[currentImageIndex];
+      const imageSlide = document.getElementById("imageSlide");
+      const previewSlide = document.getElementById("previewSlide");
+      
+      if (imageSlide) imageSlide.src = current;
+      if (previewSlide) previewSlide.src = current;
+    }
+
+    function startSlideshow() {
+      if (document.getElementById('images').classList.contains('active')) {
+        clearInterval(imageSlideshowInterval);
+        imageSlideshowInterval = setInterval(() => {
+          currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+          updateAllDisplays();
+        }, intervalTime);
+      } else if (isPreviewPlaying) {
+        clearInterval(previewSlideshowInterval);
+        previewSlideshowInterval = setInterval(() => {
+          currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+          if (endAfterImages && currentImageIndex === 0) {
+            fadeOutAndStop();
+          } else {
+            updateAllDisplays();
+          }
+        }, intervalTime);
+      }
+    }
+
+    function prevImage() {
+      clearInterval(imageSlideshowInterval);
+      currentImageIndex = (currentImageIndex - 1 + imageUrls.length) % imageUrls.length;
+      updateAllDisplays();
+      startSlideshow();
+    }
+
+    function nextImage() {
+      clearInterval(imageSlideshowInterval);
+      currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+      updateAllDisplays();
+      startSlideshow();
+    }
+
+    function updateInterval(value) {
+      intervalTime = value * 1000;
+      document.getElementById('intervalValue').textContent = value + ' seconds';
+      if (document.getElementById('images').classList.contains('active')) {
+        startSlideshow();
+      }
+    }
+
+    function toggleFullscreen() {
+      const container = document.getElementById('previewContainer');
+      if (!document.fullscreenElement) {
+        container.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    function toggleEndCondition() {
+      endAfterImages = !endAfterImages;
+      document.getElementById('endConditionToggle').textContent = endAfterImages ? 'Images' : 'Songs';
+    }
+
+    function fadeOutAndStop() {
+      const previewAudio = document.getElementById("previewAudio");
+      const fadeOutDuration = 3000;
+      const fadeOutInterval = 50;
+      const steps = fadeOutDuration / fadeOutInterval;
+      const volumeStep = previewAudio.volume / steps;
+      
+      let currentStep = 0;
+      const fadeInterval = setInterval(() => {
+        currentStep++;
+        previewAudio.volume = Math.max(0, previewAudio.volume - volumeStep);
+        
+        if (currentStep >= steps) {
+          clearInterval(fadeInterval);
+          stopPreview();
+        }
+      }, fadeOutInterval);
+    }
+
+    function startPreview() {
+      if (!isPreviewPlaying) {
+        isPreviewPlaying = true;
+        currentImageIndex = 0;
+        currentSongIndex = 0;
+        const previewSlide = document.getElementById("previewSlide");
+        const previewAudio = document.getElementById("previewAudio");
+        
+        if (imageUrls.length > 0) {
+          previewSlide.style.display = "block";
+          previewSlide.src = imageUrls[0];
+        }
+        
+        document.getElementById("previewControl").textContent = "Stop Preview";
+        
+        const audioElements = Array.from(document.querySelectorAll('#playlist audio'));
+        if (audioElements.length > 0) {
+          previewAudio.src = audioElements[0].src;
+          previewAudio.volume = 0.5;
+          previewAudio.play().catch(error => {
+            console.error("Error playing audio:", error);
+          });
+          
+          previewAudio.onended = () => {
+            currentSongIndex = (currentSongIndex + 1) % audioElements.length;
+            if (!endAfterImages && currentSongIndex === 0) {
+              fadeOutAndStop();
+            } else {
+              previewAudio.src = audioElements[currentSongIndex].src;
+              previewAudio.play();
+            }
+          };
+        }
+        
+        startSlideshow();
+      } else {
+        stopPreview();
+      }
+    }
+
+    function stopPreview() {
+      isPreviewPlaying = false;
+      const previewAudio = document.getElementById("previewAudio");
+      const previewSlide = document.getElementById("previewSlide");
+      
+      previewAudio.pause();
+      previewAudio.currentTime = 0;
+      previewAudio.volume = 0.5;
+      
+      if (previewSlide) {
+        previewSlide.style.display = "none";
+        previewSlide.src = "";
+      }
+      
+      if (previewSlideshowInterval) clearInterval(previewSlideshowInterval);
+      if (imageSlideshowInterval) clearInterval(imageSlideshowInterval);
+      
+      const previewControl = document.getElementById("previewControl");
+      if (previewControl) previewControl.textContent = "Start Preview";
+    }
+
+    function switchTab(tabName) {
+      const previewTab = document.getElementById('preview');
+      const wasInPreview = previewTab.classList.contains('active');
+      
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.tabs button').forEach(button => {
+        button.classList.remove('active');
+      });
+      
+      document.getElementById(tabName).classList.add('active');
+      document.getElementById('tab-' + tabName).classList.add('active');
+      
+      if (wasInPreview && tabName !== 'preview' && isPreviewPlaying) {
+        stopPreview();
+      } else if (tabName === 'images') {
+        startSlideshow();
+      }
+    }
+
+    function downloadAsVideo() {
+      if (isPreviewPlaying) {
+        stopPreview();
+      }
+      alert('Video download feature is not implemented yet');
+    }
   </script>
 </body>
 </html>
-
-.preview-end-control {
-  margin-top: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-.preview-end-control button {
-  padding: 5px 15px;
-  background: #00796b;
-  color: white;
-  border: none;
-  border-radius: 15px;
-  cursor: pointer;
-}
-
-function stopPreview() {
-        isPreviewPlaying = false;
-        const previewAudio = document.getElementById("previewAudio");
-        const previewSlide = document.getElementById("previewSlide");
-        
-        // Stop and reset audio
-        previewAudio.pause();
-        previewAudio.currentTime = 0;
-        previewAudio.volume = 0.5;
-        
-        // Hide preview slide
-        if (previewSlide) {
-            previewSlide.style.display = "none";
-            previewSlide.src = "";
-        }
-        
-        // Clear all intervals
-        if (previewSlideshowInterval) clearInterval(previewSlideshowInterval);
-        if (imageSlideshowInterval) clearInterval(imageSlideshowInterval);
-        
-        // Reset button text
-        const previewControl = document.getElementById("previewControl");
-        if (previewControl) previewControl.textContent = "Start Preview";
-    }
-
-function switchTab(tabName) {
-        const previewTab = document.getElementById('preview');
-        const wasInPreview = previewTab.classList.contains('active');
-        
-        // Update tab visibility
-        document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        document.querySelectorAll('.tabs button').forEach(button => {
-            button.classList.remove('active');
-        });
-        
-        document.getElementById(tabName).classList.add('active');
-        document.getElementById('tab-' + tabName).classList.add('active');
-        
-        // Handle preview state
-        if (wasInPreview && tabName !== 'preview' && isPreviewPlaying) {
-            stopPreview();
-        } else if (tabName === 'images') {
-            startSlideshow();
-        }
-    }
-
-function startPreview() {
-        if (!isPreviewPlaying) {
-            isPreviewPlaying = true;
-            currentImageIndex = 0;
-            currentSongIndex = 0;
-            const previewSlide = document.getElementById("previewSlide");
-            const previewAudio = document.getElementById("previewAudio");
-            
-            // Reset and show preview slide
-            if (imageUrls.length > 0) {
-                previewSlide.style.display = "block";
-                previewSlide.src = imageUrls[0];
-            }
-            
-            // Update button text
-            document.getElementById("previewControl").textContent = "Stop Preview";
-            
-            // Update preview audio source from playlist
-            const audioElements = Array.from(document.querySelectorAll('#playlist audio'));
-            if (audioElements.length > 0) {
-                previewAudio.src = audioElements[0].src;
-                previewAudio.volume = 0.5;
-                previewAudio.play().catch(error => {
-                    console.error("Error playing audio:", error);
-                });
-                
-                previewAudio.onended = () => {
-                    currentSongIndex = (currentSongIndex + 1) % audioElements.length;
-                    if (!endAfterImages && currentSongIndex === 0) {
-                        fadeOutAndStop();
-                    } else {
-                        previewAudio.src = audioElements[currentSongIndex].src;
-                        previewAudio.play();
-                    }
-                };
-            }
-            
-            startSlideshow();
-        } else {
-            stopPreview();
-        }
-    }
