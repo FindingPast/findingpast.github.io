@@ -368,6 +368,10 @@
       </button>
       <input type="file" id="image-file-input" accept=".jpg,.jpeg,.png,.gif" multiple style="display: none" onchange="handleImageSelect(event)">
     </div>
+    <div id="image-undo-notification" class="undo-notification">
+      <span id="image-undo-message"></span>
+      <button onclick="undoDelete()">Undo</button>
+    </div>
   </div>
 
   <div id="music" class="tab-content">
@@ -385,432 +389,76 @@
     </div>
   </div>
 
-  <a href="../" class="back">← Back to Home</a>
+  <style>
+    .undo-notification {
+      position: fixed;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg, #424242, #212121);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 25px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: top 0.3s ease;
+      z-index: 1000;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .undo-notification.show {
+      top: 20px;
+    }
+  </style>
 
   <script>
-    // Global variables
-    const tabs = ['preview', 'images', 'music'];
-    var imageUrls = [
-      "../assets/images/Vibes.jpeg",
-      "../assets/images/Open.jpeg",
-      "../assets/images/Life.jpeg",
-      "../assets/images/Gallery.jpeg",
-      "../assets/images/Frutiger Eco.jpeg"
-    ];
-    var currentImageIndex = 0;
-    var intervalTime = 5000;
-    var previewSlideshowInterval;
-    var imageSlideshowInterval;
-    var currentSongIndex = 0;
-    var isPreviewPlaying = false;
-    var songList = [
-      {
-        title: "Mii Editor - Nintendo",
-        src: "../assets/music/Mii Editor - Nintendo.mp3"
-      },
-      {
-        title: "takeshi abo - LEASE",
-        src: "../assets/music/takeshi abo - LEASE.mp3"
-      },
-      {
-        title: "yume 2kki - lotus waters",
-        src: "../assets/music/yume 2kki - lotus waters.mp3"
-      }
-    ];
-    var deletedSong = null;
-    var undoTimeout = null;
-    var imageList = [
-      {
-        title: "Vibes",
-        src: "../assets/images/Vibes.jpeg"
-      },
-      {
-        title: "Open",
-        src: "../assets/images/Open.jpeg"
-      },
-      {
-        title: "Life",
-        src: "../assets/images/Life.jpeg"
-      },
-      {
-        title: "Gallery",
-        src: "../assets/images/Gallery.jpeg"
-      },
-      {
-        title: "Frutiger Eco",
-        src: "../assets/images/Frutiger Eco.jpeg"
-      }
-    ];
-    var deletedImage = null;
-    var endAfterImages = true;
+    function showUndoNotification(message, type) {
+      clearTimeout(undoTimeout);
+      const notification = document.getElementById(type + '-undo-notification');
+      document.getElementById(type + '-undo-message').textContent = message;
+      notification.classList.add('show');
+      undoTimeout = setTimeout(() => {
+        hideUndoNotification(type);
+        if (type === 'song') {
+          deletedSong = null;
+        } else {
+          deletedImage = null;
+        }
+      }, 5000);
+    }
 
-    // Initialize when DOM is loaded
-    document.addEventListener('DOMContentLoaded', () => {
-      renderSongList();
+    function hideUndoNotification(type) {
+      const notification = document.getElementById(type + '-undo-notification');
+      notification.classList.remove('show');
+    }
+
+    function deleteImage(index) {
+      deletedImage = imageList[index];
+      imageList.splice(index, 1);
       renderImageList();
-      initializePreview();
-      updateAllDisplays();
-    });
-
-    function initializePreview() {
-      const previewAudio = document.getElementById("previewAudio");
-      const previewSlide = document.getElementById("previewSlide");
-      previewAudio.volume = 0.5;
-      previewSlide.style.display = "none";
-      previewSlide.src = "";
-      isPreviewPlaying = false;
-    }
-
-    function renderSongList() {
-      const container = document.getElementById('song-items-container');
-      container.innerHTML = songList.map((song, index) => `
-        <div class="song-item" data-index="${index}">
-          <div class="song-controls">
-            <button onclick="moveSong(${index}, -1)" ${index === 0 ? 'disabled' : ''}>&uarr;</button>
-            <button onclick="moveSong(${index}, 1)" ${index === songList.length - 1 ? 'disabled' : ''}>&darr;</button>
-          </div>
-          <div class="song-name">${song.title}</div>
-          <button class="song-controls delete-button" onclick="deleteSong(${index})">×</button>
-        </div>
-      `).join('');
-
-      const playlist = document.getElementById('playlist');
-      playlist.innerHTML = songList.map(song => `
-        <audio data-title="${song.title}" src="${song.src}"></audio>
-      `).join('');
-    }
-
-    function handleFileSelect(event) {
-      const files = event.target.files;
-      const allowedTypes = ['.mp3', '.wav', '.ogg'];
-      const maxSize = 20 * 1024 * 1024; // 20MB size limit
-
-      for (const file of files) {
-        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-        if (!allowedTypes.includes(fileExtension)) {
-          alert(`Invalid file type: ${file.name}\nAllowed types: ${allowedTypes.join(', ')}`);
-          continue;
-        }
-
-        if (file.size > maxSize) {
-          alert(`File too large: ${file.name}\nMaximum size: 20MB`);
-          continue;
-        }
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const title = file.name.replace(/\.[^/.]+$/, "");
-          songList.push({
-            title: title,
-            src: e.target.result
-          });
-          renderSongList();
-        };
-        reader.readAsDataURL(file);
-      }
-      event.target.value = '';
-    }
-
-    function moveSong(index, direction) {
-      const newIndex = index + direction;
-      if (newIndex >= 0 && newIndex < songList.length) {
-        const [removed] = songList.splice(index, 1);
-        songList.splice(newIndex, 0, removed);
-        renderSongList();
-      }
+      showUndoNotification(`You deleted "${deletedImage.title}"`, 'image');
     }
 
     function deleteSong(index) {
       deletedSong = songList[index];
       songList.splice(index, 1);
       renderSongList();
-      showUndoNotification(`You deleted "${deletedSong.title}"`);
+      showUndoNotification(`You deleted "${deletedSong.title}"`, 'song');
     }
 
-    function showUndoNotification(message) {
-      clearTimeout(undoTimeout);
-      const notification = document.getElementById('undo-notification');
-      document.getElementById('undo-message').textContent = message;
-      notification.classList.add('show');
-      undoTimeout = setTimeout(() => {
-        hideUndoNotification();
-        deletedSong = null;
-      }, 5000);
-    }
-
-    function hideUndoNotification() {
-      const notification = document.getElementById('undo-notification');
-      notification.classList.remove('show');
-    }
-
-    function renderImageList() {
-      const container = document.getElementById('image-items-container');
-      container.innerHTML = imageList.map((image, index) => `
-        <div class="image-item" data-index="${index}">
-          <img src="${image.src}" alt="${image.title}">
-          <div class="song-controls">
-            <button onclick="moveImage(${index}, -1)" ${index === 0 ? 'disabled' : ''}>&uarr;</button>
-            <button onclick="moveImage(${index}, 1)" ${index === imageList.length - 1 ? 'disabled' : ''}>&darr;</button>
-          </div>
-          <div class="song-name">${image.title}</div>
-          <button class="song-controls delete-button" onclick="deleteImage(${index})">×</button>
-        </div>
-      `).join('');
-      
-      imageUrls = imageList.map(image => image.src);
-      currentImageIndex = Math.min(currentImageIndex, imageUrls.length - 1);
-      updateAllDisplays();
-      if (isPreviewPlaying) {
-        startSlideshow();
-      }
-    }
-
-    function handleImageSelect(event) {
-      const files = event.target.files;
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-      const maxSize = 5 * 1024 * 1024; // 5MB size limit
-
-      for (const file of files) {
-        if (!allowedTypes.includes(file.type)) {
-          alert(`Invalid file type: ${file.name}\nAllowed types: JPG, JPEG, PNG, GIF`);
-          continue;
-        }
-
-        if (file.size > maxSize) {
-          alert(`File too large: ${file.name}\nMaximum size: 5MB`);
-          continue;
-        }
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const title = file.name.replace(/\.[^/.]+$/, "");
-          imageList.push({
-            title: title,
-            src: e.target.result
-          });
-          renderImageList();
-        };
-        reader.readAsDataURL(file);
-      }
-      event.target.value = '';
-    }
-
-    function moveImage(index, direction) {
-      const newIndex = index + direction;
-      if (newIndex >= 0 && newIndex < imageList.length) {
-        const [removed] = imageList.splice(index, 1);
-        imageList.splice(newIndex, 0, removed);
-        renderImageList();
-      }
-    }
-
-    // Add to global variables section
-    var deletedImage = null;
-
-    function deleteImage(index) {
-      deletedImage = imageList[index];
-      imageList.splice(index, 1);
-      renderImageList();
-      showUndoNotification(`You deleted "${deletedImage.title}"`);
-    }
-
-    // Modify the existing undoDelete function to handle both songs and images
     function undoDelete() {
       if (deletedSong) {
         songList.push(deletedSong);
         renderSongList();
-        hideUndoNotification();
+        hideUndoNotification('song');
         deletedSong = null;
       } else if (deletedImage) {
         imageList.push(deletedImage);
         renderImageList();
-        hideUndoNotification();
+        hideUndoNotification('image');
         deletedImage = null;
       }
-    }
-
-    function updateAllDisplays() {
-      if (imageUrls.length === 0) {
-        const imageSlide = document.getElementById("imageSlide");
-        const previewSlide = document.getElementById("previewSlide");
-        if (imageSlide) imageSlide.src = "";
-        if (previewSlide) {
-          previewSlide.src = "";
-          previewSlide.style.display = "none";
-        }
-        return;
-      }
-      
-      const current = imageUrls[currentImageIndex];
-      const imageSlide = document.getElementById("imageSlide");
-      const previewSlide = document.getElementById("previewSlide");
-      
-      if (imageSlide) imageSlide.src = current;
-      if (previewSlide) previewSlide.src = current;
-    }
-
-    function startSlideshow() {
-      if (document.getElementById('images').classList.contains('active')) {
-        clearInterval(imageSlideshowInterval);
-        imageSlideshowInterval = setInterval(() => {
-          currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
-          updateAllDisplays();
-        }, intervalTime);
-      } else if (isPreviewPlaying) {
-        clearInterval(previewSlideshowInterval);
-        previewSlideshowInterval = setInterval(() => {
-          currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
-          if (endAfterImages && currentImageIndex === 0) {
-            fadeOutAndStop();
-          } else {
-            updateAllDisplays();
-          }
-        }, intervalTime);
-      }
-    }
-
-    function prevImage() {
-      clearInterval(imageSlideshowInterval);
-      currentImageIndex = (currentImageIndex - 1 + imageUrls.length) % imageUrls.length;
-      updateAllDisplays();
-      startSlideshow();
-    }
-
-    function nextImage() {
-      clearInterval(imageSlideshowInterval);
-      currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
-      updateAllDisplays();
-      startSlideshow();
-    }
-
-    function updateInterval(value) {
-      intervalTime = value * 1000;
-      document.getElementById('intervalValue').textContent = value + ' seconds';
-      if (document.getElementById('images').classList.contains('active')) {
-        startSlideshow();
-      }
-    }
-
-    function toggleFullscreen() {
-      const container = document.getElementById('previewContainer');
-      if (!document.fullscreenElement) {
-        container.requestFullscreen();
-      } else {
-        document.exitFullscreen();
-      }
-    }
-
-    function toggleEndCondition() {
-      endAfterImages = !endAfterImages;
-      document.getElementById('endConditionToggle').textContent = endAfterImages ? 'Images' : 'Songs';
-    }
-
-    function fadeOutAndStop() {
-      const previewAudio = document.getElementById("previewAudio");
-      const fadeOutDuration = 3000;
-      const fadeOutInterval = 50;
-      const steps = fadeOutDuration / fadeOutInterval;
-      const volumeStep = previewAudio.volume / steps;
-      
-      let currentStep = 0;
-      const fadeInterval = setInterval(() => {
-        currentStep++;
-        previewAudio.volume = Math.max(0, previewAudio.volume - volumeStep);
-        
-        if (currentStep >= steps) {
-          clearInterval(fadeInterval);
-          stopPreview();
-        }
-      }, fadeOutInterval);
-    }
-
-    function startPreview() {
-      if (!isPreviewPlaying) {
-        isPreviewPlaying = true;
-        currentImageIndex = 0;
-        currentSongIndex = 0;
-        const previewSlide = document.getElementById("previewSlide");
-        const previewAudio = document.getElementById("previewAudio");
-        
-        if (imageUrls.length > 0) {
-          previewSlide.style.display = "block";
-          previewSlide.src = imageUrls[0];
-        }
-        
-        document.getElementById("previewControl").textContent = "Stop Preview";
-        
-        const audioElements = Array.from(document.querySelectorAll('#playlist audio'));
-        if (audioElements.length > 0) {
-          previewAudio.src = audioElements[0].src;
-          previewAudio.volume = 0.5;
-          previewAudio.play().catch(error => {
-            console.error("Error playing audio:", error);
-          });
-          
-          previewAudio.onended = () => {
-            currentSongIndex = (currentSongIndex + 1) % audioElements.length;
-            if (!endAfterImages && currentSongIndex === 0) {
-              fadeOutAndStop();
-            } else {
-              previewAudio.src = audioElements[currentSongIndex].src;
-              previewAudio.play();
-            }
-          };
-        }
-        
-        startSlideshow();
-      } else {
-        stopPreview();
-      }
-    }
-
-    function stopPreview() {
-      isPreviewPlaying = false;
-      const previewAudio = document.getElementById("previewAudio");
-      const previewSlide = document.getElementById("previewSlide");
-      
-      previewAudio.pause();
-      previewAudio.currentTime = 0;
-      previewAudio.volume = 0.5;
-      
-      if (previewSlide) {
-        previewSlide.style.display = "none";
-        previewSlide.src = "";
-      }
-      
-      if (previewSlideshowInterval) clearInterval(previewSlideshowInterval);
-      if (imageSlideshowInterval) clearInterval(imageSlideshowInterval);
-      
-      const previewControl = document.getElementById("previewControl");
-      if (previewControl) previewControl.textContent = "Start Preview";
-    }
-
-    function switchTab(tabName) {
-      const previewTab = document.getElementById('preview');
-      const wasInPreview = previewTab.classList.contains('active');
-      
-      document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-      });
-      document.querySelectorAll('.tabs button').forEach(button => {
-        button.classList.remove('active');
-      });
-      
-      document.getElementById(tabName).classList.add('active');
-      document.getElementById('tab-' + tabName).classList.add('active');
-      
-      if (wasInPreview && tabName !== 'preview' && isPreviewPlaying) {
-        stopPreview();
-      } else if (tabName === 'images') {
-        startSlideshow();
-      }
-    }
-
-    function downloadAsVideo() {
-      if (isPreviewPlaying) {
-        stopPreview();
-      }
-      alert('Video download feature is not implemented yet');
     }
   </script>
 </body>
