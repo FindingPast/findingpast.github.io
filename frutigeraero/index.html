@@ -389,30 +389,24 @@
     </div>
   </div>
 
-  <style>
-    .undo-notification {
-      position: fixed;
-      top: -100px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: linear-gradient(180deg, #424242, #212121);
-      color: white;
-      padding: 15px 25px;
-      border-radius: 25px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      transition: top 0.3s ease;
-      z-index: 1000;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .undo-notification.show {
-      top: 20px;
-    }
-  </style>
-
   <script>
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      renderSongList();
+      renderImageList();
+      initializePreview();
+      updateAllDisplays();
+      switchTab('preview'); // Ensure preview tab is active by default
+    });
+
+    function initializePreview() {
+      const previewAudio = document.getElementById("previewAudio");
+      const previewSlide = document.getElementById("previewSlide");
+      previewAudio.volume = 0.5;
+      previewSlide.style.display = "none";
+      isPreviewPlaying = false;
+    }
+
     function showUndoNotification(message, type) {
       clearTimeout(undoTimeout);
       const notification = document.getElementById(type + '-undo-notification');
