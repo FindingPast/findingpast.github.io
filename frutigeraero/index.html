@@ -331,6 +331,8 @@
     <div class="preview-end-control">
       <span>Preview will end after going through all</span>
       <button onclick="toggleEndCondition()" id="endConditionToggle">Images</button>
+      <span style="margin-left: 15px;">Fade out image at the end?</span>
+      <button onclick="toggleImageFade()" id="imageFadeToggle">No</button>
     </div>
   </div>
 
@@ -387,7 +389,9 @@
     let deletedImage = null;
     let undoTimeout;
     let endAfterImages = true;
+    let imageFadeOut = false; // New variable for image fade-out option
     let audioFadeInterval;
+    let imageFadeInterval; // New variable for image fade interval
 
     // Initialize when DOM is loaded
     document.addEventListener('DOMContentLoaded', () => {
@@ -419,6 +423,8 @@
       const previewSlide = document.getElementById("previewSlide");
       previewAudio.volume = 0.5;
       previewSlide.style.display = "none";
+      previewSlide.style.opacity = 1; // Ensure full opacity at start
+      previewSlide.style.transition = "";
       isPreviewPlaying = false;
     }
 
@@ -458,6 +464,7 @@
       const previewControl = document.getElementById('previewControl');
 
       previewSlide.style.display = 'block';
+      previewSlide.style.opacity = 1; // Reset opacity when starting
       previewAudio.play();
       isPreviewPlaying = true;
       previewControl.textContent = 'Stop Preview';
@@ -480,24 +487,44 @@
       }, slideInterval);
     }
 
+    function toggleImageFade() {
+      imageFadeOut = !imageFadeOut;
+      const button = document.getElementById('imageFadeToggle');
+      button.textContent = imageFadeOut ? 'Yes' : 'No';
+    }
+
     function fadeOutAndStop() {
       const previewAudio = document.getElementById('previewAudio');
+      const previewSlide = document.getElementById('previewSlide');
       const initialVolume = previewAudio.volume;
       const fadeSteps = 30; // Number of steps for 3-second fade
       const fadeInterval = 3000 / fadeSteps; // Interval between volume changes
       const volumeStep = initialVolume / fadeSteps;
       let currentStep = 0;
 
+      // Always fade out audio
       audioFadeInterval = setInterval(() => {
         currentStep++;
         if (currentStep >= fadeSteps) {
           clearInterval(audioFadeInterval);
+          clearInterval(imageFadeInterval); // Clear image fade interval too
           stopPreview();
           previewAudio.volume = initialVolume; // Reset volume for next play
+          if (imageFadeOut) {
+            previewSlide.style.opacity = 1; // Reset opacity
+          }
         } else {
           previewAudio.volume = initialVolume - (volumeStep * currentStep);
         }
       }, fadeInterval);
+
+      // Fade out image if option is enabled
+      if (imageFadeOut) {
+        previewSlide.style.transition = `opacity ${3}s ease-out`;
+        imageFadeInterval = setTimeout(() => {
+          previewSlide.style.opacity = 0;
+        }, 50); // Small delay to ensure the transition property is applied
+      }
     }
 
     function stopPreview() {
@@ -573,7 +600,11 @@
         item.innerHTML = `
           <img src="${image.url}" alt="${image.title}">
           <span class="song-name">${image.title}</span>
-          <button class="delete-button" onclick="deleteImage(${index})">×</button>
+          <div class="item-controls">
+            <button class="move-button" onclick="moveItem('image', ${index}, -1)" ${index === 0 ? 'disabled' : ''}>↑</button>
+            <button class="move-button" onclick="moveItem('image', ${index}, 1)" ${index === imageList.length - 1 ? 'disabled' : ''}>↓</button>
+            <button class="delete-button" onclick="deleteImage(${index})">×</button>
+          </div>
         `;
         container.appendChild(item);
       });
@@ -587,7 +618,11 @@
         item.className = 'song-item';
         item.innerHTML = `
           <span class="song-name">${song.title}</span>
-          <button class="delete-button" onclick="deleteSong(${index})">×</button>
+          <div class="item-controls">
+            <button class="move-button" onclick="moveItem('song', ${index}, -1)" ${index === 0 ? 'disabled' : ''}>↑</button>
+            <button class="move-button" onclick="moveItem('song', ${index}, 1)" ${index === songList.length - 1 ? 'disabled' : ''}>↓</button>
+            <button class="delete-button" onclick="deleteSong(${index})">×</button>
+          </div>
         `;
         container.appendChild(item);
       });
@@ -654,32 +689,103 @@
     }
 
     function deleteImage(index) {
-      deletedImage = imageList[index];
+      deletedImage = {
+        item: imageList[index],
+        originalIndex: index
+      };
       imageList.splice(index, 1);
       renderImageList();
-      showUndoNotification(`You deleted "${deletedImage.title}"`, 'image');
+      showUndoNotification(`You deleted "${deletedImage.item.title}"`, 'image');
     }
 
     function deleteSong(index) {
-      deletedSong = songList[index];
+      deletedSong = {
+        item: songList[index],
+        originalIndex: index
+      };
       songList.splice(index, 1);
       renderSongList();
-      showUndoNotification(`You deleted "${deletedSong.title}"`, 'song');
+      showUndoNotification(`You deleted "${deletedSong.item.title}"`, 'song');
     }
 
     function undoDelete() {
-      if (deletedSong) {
-        songList.push(deletedSong);
-        renderSongList();
-        hideUndoNotification('song');
-        deletedSong = null;
-      } else if (deletedImage) {
-        imageList.push(deletedImage);
+      // Check which tab is active to determine which undo to perform
+      const imagesTabActive = document.getElementById('images').classList.contains('active');
+      const musicTabActive = document.getElementById('music').classList.contains('active');
+      
+      if (imagesTabActive && deletedImage) {
+        // Restore image to its original position
+        imageList.splice(deletedImage.originalIndex, 0, deletedImage.item);
         renderImageList();
         hideUndoNotification('image');
         deletedImage = null;
+      } else if (musicTabActive && deletedSong) {
+        // Restore song to its original position
+        songList.splice(deletedSong.originalIndex, 0, deletedSong.item);
+        renderSongList();
+        hideUndoNotification('song');
+        deletedSong = null;
+      }
+    }
+
+    function moveItem(type, index, direction) {
+      const newIndex = index + direction;
+      
+      if (type === 'image') {
+        if (newIndex >= 0 && newIndex < imageList.length) {
+          const item = imageList.splice(index, 1)[0];
+          imageList.splice(newIndex, 0, item);
+          renderImageList();
+          
+          // Update current image index if necessary
+          if (index === currentImageIndex) {
+            currentImageIndex = newIndex;
+          } else if (index < currentImageIndex && newIndex >= currentImageIndex) {
+            currentImageIndex--;
+          } else if (index > currentImageIndex && newIndex <= currentImageIndex) {
+            currentImageIndex++;
+          }
+          
+          updateAllDisplays();
+        }
+      } else if (type === 'song') {
+        if (newIndex >= 0 && newIndex < songList.length) {
+          const item = songList.splice(index, 1)[0];
+          songList.splice(newIndex, 0, item);
+          renderSongList();
+          
+          // Update current song index if necessary
+          if (index === currentSongIndex) {
+            currentSongIndex = newIndex;
+          } else if (index < currentSongIndex && newIndex >= currentSongIndex) {
+            currentSongIndex--;
+          } else if (index > currentSongIndex && newIndex <= currentSongIndex) {
+            currentSongIndex++;
+          }
+          
+          updateAllDisplays();
+        }
       }
     }
   </script>
 </body>
 </html>
+
+.item-controls {
+  display: flex;
+  align-items: center;
+}
+
+.move-button {
+  background: none;
+  border: none;
+  color: #0288d1;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 5px;
+}
+
+.move-button:disabled {
+  color: #b0bec5;
+  cursor: not-allowed;
+}
