@@ -594,7 +594,8 @@
         previewSlide.src = currentImage.url;
       }
 
-      if (songList.length > 0) {
+      // Only update audio source if preview is not currently playing
+      if (songList.length > 0 && !isPreviewPlaying) {
         const currentSong = songList[currentSongIndex];
         previewAudio.src = currentSong.url;
       }
