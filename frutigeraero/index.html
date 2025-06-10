@@ -910,7 +910,258 @@
     }
 
     function downloadAsVideo() {
-      alert('This feature is not implemented yet.');
+      // Create and show the first popup for end condition
+      showEndConditionPopup();
+    }
+
+    function showEndConditionPopup() {
+      // Create popup container
+      const popup = document.createElement('div');
+      popup.style.position = 'fixed';
+      popup.style.top = '50%';
+      popup.style.left = '50%';
+      popup.style.transform = 'translate(-50%, -50%)';
+      popup.style.background = 'linear-gradient(180deg, #ffffff, #e1f5fe)';
+      popup.style.padding = '20px';
+      popup.style.borderRadius = '15px';
+      popup.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
+      popup.style.zIndex = '1001';
+      popup.style.maxWidth = '400px';
+      popup.style.textAlign = 'center';
+      popup.style.border = '1px solid rgba(255, 255, 255, 0.7)';
+      
+      // Add title
+      const title = document.createElement('h3');
+      title.textContent = 'Would you want the video to end after it goes through all the Images? Or through all the Songs?';
+      title.style.marginBottom = '20px';
+      title.style.color = '#0d47a1';
+      
+      // Add buttons container
+      const buttonsContainer = document.createElement('div');
+      buttonsContainer.style.display = 'flex';
+      buttonsContainer.style.justifyContent = 'center';
+      buttonsContainer.style.gap = '15px';
+      
+      // Add Images button
+      const imagesButton = document.createElement('button');
+      imagesButton.textContent = 'Images';
+      imagesButton.style.padding = '10px 20px';
+      imagesButton.style.background = 'linear-gradient(180deg, #00e5ff, #009688)';
+      imagesButton.style.border = 'none';
+      imagesButton.style.color = 'white';
+      imagesButton.style.fontWeight = 'bold';
+      imagesButton.style.borderRadius = '25px';
+      imagesButton.style.cursor = 'pointer';
+      imagesButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+      
+      // Add Songs button
+      const songsButton = document.createElement('button');
+      songsButton.textContent = 'Songs';
+      songsButton.style.padding = '10px 20px';
+      songsButton.style.background = 'linear-gradient(180deg, #00e5ff, #009688)';
+      songsButton.style.border = 'none';
+      songsButton.style.color = 'white';
+      songsButton.style.fontWeight = 'bold';
+      songsButton.style.borderRadius = '25px';
+      songsButton.style.cursor = 'pointer';
+      songsButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+      
+      // Add close button (X)
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'X';
+      closeButton.style.position = 'absolute';
+      closeButton.style.top = '10px';
+      closeButton.style.right = '10px';
+      closeButton.style.background = 'none';
+      closeButton.style.border = 'none';
+      closeButton.style.fontSize = '16px';
+      closeButton.style.color = '#0d47a1';
+      closeButton.style.cursor = 'pointer';
+      
+      // Add event listeners
+      imagesButton.addEventListener('click', function() {
+        document.body.removeChild(popup);
+        showFormatPopup(true); // true for ending after images
+      });
+      
+      songsButton.addEventListener('click', function() {
+        document.body.removeChild(popup);
+        showFormatPopup(false); // false for ending after songs
+      });
+      
+      closeButton.addEventListener('click', function() {
+        document.body.removeChild(popup);
+      });
+      
+      // Assemble popup
+      buttonsContainer.appendChild(imagesButton);
+      buttonsContainer.appendChild(songsButton);
+      popup.appendChild(title);
+      popup.appendChild(buttonsContainer);
+      popup.appendChild(closeButton);
+      
+      // Add to body
+      document.body.appendChild(popup);
+    }
+
+    function showFormatPopup(endAfterImages) {
+      // Create popup container
+      const popup = document.createElement('div');
+      popup.style.position = 'fixed';
+      popup.style.top = '50%';
+      popup.style.left = '50%';
+      popup.style.transform = 'translate(-50%, -50%)';
+      popup.style.background = 'linear-gradient(180deg, #ffffff, #e1f5fe)';
+      popup.style.padding = '20px';
+      popup.style.borderRadius = '15px';
+      popup.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
+      popup.style.zIndex = '1001';
+      popup.style.maxWidth = '400px';
+      popup.style.textAlign = 'center';
+      popup.style.border = '1px solid rgba(255, 255, 255, 0.7)';
+      
+      // Add title
+      const title = document.createElement('h3');
+      title.textContent = 'Choose your Video Format';
+      title.style.marginBottom = '20px';
+      title.style.color = '#0d47a1';
+      
+      // Add buttons container
+      const buttonsContainer = document.createElement('div');
+      buttonsContainer.style.display = 'flex';
+      buttonsContainer.style.justifyContent = 'center';
+      buttonsContainer.style.gap = '15px';
+      
+      // Add MP4 button
+      const mp4Button = document.createElement('button');
+      mp4Button.textContent = 'MP4';
+      mp4Button.style.padding = '10px 20px';
+      mp4Button.style.background = 'linear-gradient(180deg, #00e5ff, #009688)';
+      mp4Button.style.border = 'none';
+      mp4Button.style.color = 'white';
+      mp4Button.style.fontWeight = 'bold';
+      mp4Button.style.borderRadius = '25px';
+      mp4Button.style.cursor = 'pointer';
+      mp4Button.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+      
+      // Add MOV button
+      const movButton = document.createElement('button');
+      movButton.textContent = 'MOV';
+      movButton.style.padding = '10px 20px';
+      movButton.style.background = 'linear-gradient(180deg, #00e5ff, #009688)';
+      movButton.style.border = 'none';
+      movButton.style.color = 'white';
+      movButton.style.fontWeight = 'bold';
+      movButton.style.borderRadius = '25px';
+      movButton.style.cursor = 'pointer';
+      movButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+      
+      // Add close button (X)
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'X';
+      closeButton.style.position = 'absolute';
+      closeButton.style.top = '10px';
+      closeButton.style.right = '10px';
+      closeButton.style.background = 'none';
+      closeButton.style.border = 'none';
+      closeButton.style.fontSize = '16px';
+      closeButton.style.color = '#0d47a1';
+      closeButton.style.cursor = 'pointer';
+      
+      // Add event listeners
+      mp4Button.addEventListener('click', function() {
+        document.body.removeChild(popup);
+        startVideoCapture(endAfterImages, 'mp4');
+      });
+      
+      movButton.addEventListener('click', function() {
+        document.body.removeChild(popup);
+        startVideoCapture(endAfterImages, 'mov');
+      });
+      
+      closeButton.addEventListener('click', function() {
+        document.body.removeChild(popup);
+      });
+      
+      // Assemble popup
+      buttonsContainer.appendChild(mp4Button);
+      buttonsContainer.appendChild(movButton);
+      popup.appendChild(title);
+      popup.appendChild(buttonsContainer);
+      popup.appendChild(closeButton);
+      
+      // Add to body
+      document.body.appendChild(popup);
+    }
+
+    function startVideoCapture(endAfterImages, format) {
+      // In a real implementation, this would use MediaRecorder API or a library like RecordRTC
+      // to capture the preview container as it plays
+      
+      // For now, we'll simulate the process
+      alert(`Starting video capture in ${format.toUpperCase()} format. The video will end after all ${endAfterImages ? 'images' : 'songs'}.`);
+      
+      // Here you would:
+      // 1. Set up a MediaRecorder to capture the preview container
+      // 2. Start the preview with the specified end condition
+      // 3. When the preview ends, stop the recording and download the file
+      
+      // This is a placeholder for the actual implementation
+      console.log(`Video capture started with format: ${format}, ending after: ${endAfterImages ? 'images' : 'songs'}`);
+      
+      // In a real implementation, you would use code like this:
+      /*
+      const stream = document.getElementById('previewContainer').captureStream(60); // 60fps
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: `video/${format}`,
+        videoBitsPerSecond: 8000000 // 8Mbps for 1080p
+      });
+      
+      const chunks = [];
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+      
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: `video/${format}` });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `frutiger-aero-slideshow.${format}`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+      
+      // Start recording
+      mediaRecorder.start();
+      
+      // Start the preview with the specified end condition
+      const originalEndAfterImages = endAfterImages;
+      endAfterImages = endAfterImages;
+      startPreview();
+      
+      // Add a listener to stop recording when the preview stops
+      const previewControl = document.getElementById('previewControl');
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' || mutation.type === 'characterData') {
+            if (previewControl.textContent === 'Start Preview') {
+              mediaRecorder.stop();
+              observer.disconnect();
+              endAfterImages = originalEndAfterImages; // Restore original setting
+            }
+          }
+        });
+      });
+      
+      observer.observe(previewControl, {
+        attributes: true,
+        childList: true,
+        characterData: true
+      });
+      */
     }
   </script>
 </body>
