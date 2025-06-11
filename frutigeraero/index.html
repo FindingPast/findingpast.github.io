@@ -520,6 +520,12 @@
         return;
       }
 
+      // Clear any existing intervals or timeouts first
+      clearInterval(previewInterval);
+      clearInterval(audioFadeInterval);
+      clearTimeout(imageFadeInterval);
+      clearTimeout(songChangeTimeout);
+
       const previewSlide = document.getElementById('previewSlide');
       const previewAudio = document.getElementById('previewAudio');
       const previewControl = document.getElementById('previewControl');
@@ -529,10 +535,11 @@
       currentSongIndex = 0;
       
       // Update displays with the current indices
-      updateAllDisplays();
+      updatePreviewDisplay();
       
       previewSlide.style.display = 'block';
       previewSlide.style.opacity = 1;
+      previewSlide.style.transition = '';
       
       // Set the audio source and play
       if (songList.length > 0) {
@@ -746,7 +753,9 @@
         }
         const currentImage = imageList[currentImageIndex];
         imageSlide.src = currentImage.url;
-        previewSlide.src = currentImage.url;
+        if (!isPreviewPlaying || previewSlide.style.display === 'none') {
+          previewSlide.src = currentImage.url;
+        }
       }
 
       if (songList.length > 0 && !isPreviewPlaying) {
