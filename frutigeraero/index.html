@@ -603,19 +603,29 @@
     function fadeOutAndStop() {
       const previewAudio = document.getElementById('previewAudio');
       const previewSlide = document.getElementById('previewSlide');
+      const previewControl = document.getElementById('previewControl');
       const initialVolume = previewAudio.volume;
       const fadeSteps = 30; // Number of steps for 3-second fade
       const fadeInterval = 3000 / fadeSteps; // Interval between volume changes
       const volumeStep = initialVolume / fadeSteps;
       let currentStep = 0;
 
+      // Set the control text to Start Preview immediately to prevent flashing
+      previewControl.textContent = 'Start Preview';
+      
       // Always fade out audio
       audioFadeInterval = setInterval(() => {
         currentStep++;
         if (currentStep >= fadeSteps) {
           clearInterval(audioFadeInterval);
           clearInterval(imageFadeInterval);
+          
+          // Hide the slide before stopping the preview
+          previewSlide.style.display = 'none';
+          
+          // Now stop the preview
           stopPreview();
+          
           previewAudio.volume = initialVolume; // Reset volume for next play
           if (imageFadeOut) {
             previewSlide.style.opacity = 1; // Reset opacity
@@ -632,6 +642,9 @@
           previewSlide.style.opacity = 0;
         }, 50); // Small delay to ensure the transition property is applied
       }
+      
+      // Set isPreviewPlaying to false immediately to prevent updateAllDisplays from showing the image
+      isPreviewPlaying = false;
     }
 
     function stopPreview() {
