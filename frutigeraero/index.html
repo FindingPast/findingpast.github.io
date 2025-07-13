@@ -524,6 +524,18 @@
       }
     }
 
+    function startImageTabSlideshow() {
+      // Clear any existing interval first
+      clearInterval(imageTabInterval);
+      
+      // Only start if we have images
+      if (imageList.length > 1) {
+        imageTabInterval = setInterval(() => {
+          nextImage();
+        }, slideInterval);
+      }
+    }
+
     function startPreview() {
       if (imageList.length === 0 || songList.length === 0) {
         alert('Please add both images and songs before starting the preview');
