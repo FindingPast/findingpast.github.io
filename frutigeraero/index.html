@@ -442,6 +442,7 @@
     let currentSongIndex = 0;
     let slideInterval = 5000;
     let previewInterval;
+    let imageTabInterval; // Add this new variable
     let isPreviewPlaying = false;
     let deletedSong = null;
     let deletedImage = null;
@@ -800,6 +801,26 @@
           }
           nextImage();
           updatePreviewDisplay();
+        }, slideInterval);
+      }
+      
+      // Clear image tab interval when switching away from images tab
+      if (tabName !== 'images') {
+        clearInterval(imageTabInterval);
+      } else {
+        // Start image tab interval when switching to images tab
+        startImageTabSlideshow();
+      }
+    }
+
+    function startImageTabSlideshow() {
+      // Clear any existing interval first
+      clearInterval(imageTabInterval);
+      
+      // Only start if we have images
+      if (imageList.length > 1) {
+        imageTabInterval = setInterval(() => {
+          nextImage();
         }, slideInterval);
       }
     }
