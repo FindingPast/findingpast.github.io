@@ -23,15 +23,15 @@
       margin-bottom: 20px;
     }
 
-    .header h1 {
-      margin: 0;
+    .back-link {
       color: #0078d7;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
     }
 
-    .back-button {
-      text-decoration: none;
-      color: #0078d7;
-      font-size: 1.2em;
+    .back-link:hover {
+      text-decoration: underline;
     }
 
     .tabs {
@@ -40,46 +40,83 @@
       border-bottom: 1px solid #ddd;
     }
 
-    .tab {
+    .tabs button {
+      background-color: transparent;
+      border: none;
       padding: 10px 20px;
       cursor: pointer;
-      background-color: #e6f2ff;
-      border: 1px solid #ddd;
-      border-bottom: none;
-      border-radius: 5px 5px 0 0;
-      margin-right: 5px;
+      font-size: 16px;
+      color: #666;
+      border-bottom: 3px solid transparent;
     }
 
-    .tab.active {
-      background-color: #0078d7;
-      color: white;
+    .tabs button.active {
+      color: #0078d7;
+      border-bottom: 3px solid #0078d7;
     }
 
     .tab-content {
       display: none;
-      padding: 20px;
-      border: 1px solid #ddd;
-      border-top: none;
-      background-color: white;
-      border-radius: 0 0 5px 5px;
     }
 
     .tab-content.active {
       display: block;
     }
 
-    .controls {
+    .preview-container {
+      position: relative;
+      width: 100%;
+      height: 500px;
+      background-color: #000;
+      overflow: hidden;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .preview-slide {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .image-display {
+      width: 100%;
+      height: 300px;
+      background-color: #eee;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin-bottom: 20px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .current-image {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .preview-controls {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
     }
 
     button {
       background-color: #0078d7;
       color: white;
       border: none;
-      padding: 10px 15px;
-      border-radius: 5px;
+      padding: 8px 16px;
+      border-radius: 4px;
       cursor: pointer;
-      margin-right: 10px;
       transition: background-color 0.3s;
     }
 
@@ -98,70 +135,29 @@
       padding: 10px;
       background-color: #f5f5f5;
       border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    .file-name {
-      flex-grow: 1;
+    .file-item img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
       margin-right: 10px;
+      border-radius: 4px;
     }
 
-    .file-actions button {
-      padding: 5px 10px;
-      font-size: 0.9em;
-    }
-
-    .preview-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: black;
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    .preview-slide {
-      max-width: 90%;
-      max-height: 80%;
-      object-fit: contain;
-    }
-
-    .preview-controls {
-      position: absolute;
-      bottom: 20px;
+    .song-item {
       display: flex;
-      gap: 10px;
-    }
-
-    .preview-controls button {
-      background-color: rgba(255, 255, 255, 0.2);
-      color: white;
-      border: 1px solid white;
-    }
-
-    .image-container {
-      text-align: center;
-      margin-top: 20px;
-    }
-
-    .current-image {
-      max-width: 100%;
-      max-height: 400px;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: #f5f5f5;
       border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    .interval-control {
-      margin-top: 20px;
-      display: flex;
-      align-items: center;
-    }
-
-    .interval-control label {
+    .song-name {
+      flex-grow: 1;
       margin-right: 10px;
     }
 
@@ -184,541 +180,679 @@
     .undo-notification {
       position: fixed;
       bottom: 20px;
-      right: 20px;
-      background-color: #0078d7;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
       color: white;
-      padding: 15px;
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-      display: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    .undo-notification.show {
+      opacity: 1;
+      pointer-events: auto;
     }
 
     .undo-notification button {
-      background-color: white;
-      color: #0078d7;
-      margin-left: 10px;
+      background-color: #0078d7;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .delete-button {
+      background-color: #d9534f;
+      color: white;
+      border: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0;
+    }
+
+    .delete-button:hover {
+      background-color: #c9302c;
+    }
+
+    .slider-container {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .preview-end-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: linear-gradient(to right, rgba(0, 120, 215, 0.1), rgba(0, 120, 215, 0.2));
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      backdrop-filter: blur(5px);
+    }
+
+    .image-fade-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .item-controls {
+      display: flex;
+      gap: 5px;
+      margin-right: 10px;
+    }
+
+    .move-button {
+      background-color: #0078d7;
+      color: white;
+      border: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0;
+    }
+
+    .move-button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>Frutiger Aero Experience</h1>
-      <a href="../" class="back-button">← Back to Home</a>
+      <h1>Frutiger Aero</h1>
+      <a href="../" class="back-link">← Back to Home</a>
     </div>
 
     <div class="tabs">
-      <div class="tab active" data-tab="images">Images</div>
-      <div class="tab" data-tab="music">Music</div>
+      <button id="tab-preview" class="active" onclick="switchTab('preview')">Preview</button>
+      <button id="tab-images" onclick="switchTab('images')">Images</button>
+      <button id="tab-music" onclick="switchTab('music')">Music</button>
     </div>
 
-    <div id="imagesTab" class="tab-content active">
-      <div class="controls">
-        <button id="importImages">Import Images</button>
-        <button id="previewControl">Start Preview</button>
-        <button id="fullscreenToggle">Toggle Fullscreen</button>
+    <div id="preview" class="tab-content active">
+      <div class="preview-container" id="previewContainer">
+        <img id="previewSlide" class="preview-slide" src="" alt="Preview">
+        <audio id="previewAudio" controls style="width: 100%;"></audio>
       </div>
-
-      <div class="interval-control">
-        <label for="intervalInput">Image Interval (seconds):</label>
-        <input type="number" id="intervalInput" min="1" value="5">
-        <button id="updateInterval">Update</button>
+      <div class="preview-controls">
+        <button id="previewControl" onclick="isPreviewPlaying ? stopPreview() : startPreview()">Start Preview</button>
+        <button onclick="toggleFullscreen()">Fullscreen</button>
+        <div class="preview-end-control">
+          <span>End after all:</span>
+          <button id="endConditionToggle" onclick="toggleEndCondition()">Images</button>
+        </div>
       </div>
+    </div>
 
-      <div class="fade-control">
-        <label for="fadeToggle">Image Fade:</label>
-        <input type="checkbox" id="fadeToggle" checked>
-      </div>
-
-      <div class="image-container">
+    <div id="images" class="tab-content">
+      <div class="image-display">
         <img id="imageSlide" class="current-image" src="" alt="No images imported yet">
       </div>
-
-      <div class="file-list" id="imageList"></div>
-    </div>
-
-    <div id="musicTab" class="tab-content">
-      <div class="controls">
-        <button id="importSongs">Import Songs</button>
-        <audio id="previewAudio" controls></audio>
+      <div class="nav-buttons">
+        <button onclick="prevImage()">Previous</button>
+        <button onclick="nextImage()">Next</button>
       </div>
-
-      <div class="file-list" id="songList"></div>
+      <div class="slider-container">
+        <label for="intervalSlider">Image Change Interval (seconds):</label>
+        <input type="range" id="intervalSlider" min="1" max="20" value="5" oninput="updateInterval(this.value)">
+        <div id="intervalValue">5 seconds</div>
+      </div>
+      <div class="image-fade-control">
+        <span>Fade out image at the end?</span>
+        <button onclick="toggleImageFade()" id="imageFadeToggle">No</button>
+      </div>
+      <div class="image-list">
+        <div id="image-items-container"></div>
+        <button id="import-button" onclick="document.getElementById('image-file-input').click()">
+          Import Images
+        </button>
+        <input type="file" id="image-file-input" accept=".jpg,.jpeg,.png,.gif" multiple style="display: none" onchange="handleImageSelect(event)">
+      </div>
+      <div id="image-undo-notification" class="undo-notification">
+        <span id="image-undo-message"></span>
+        <button onclick="undoDelete()">Undo</button>
+      </div>
     </div>
-  </div>
 
-  <div class="preview-container" id="previewContainer">
-    <img id="previewSlide" class="preview-slide" src="" alt="Preview">
-    <div class="preview-controls">
-      <button id="exitPreview">Exit Preview</button>
-      <button id="toggleEndCondition">End After All Songs</button>
+    <div id="music" class="tab-content">
+      <div class="song-list">
+        <div id="song-items-container"></div>
+        <button id="import-button" onclick="document.getElementById('file-input').click()">
+          Import Songs
+        </button>
+        <input type="file" id="file-input" accept=".mp3,.wav,.ogg" multiple style="display: none" onchange="handleFileSelect(event)">
+      </div>
+      <div id="playlist"></div>
+      <div id="song-undo-notification" class="undo-notification">
+        <span id="song-undo-message"></span>
+        <button onclick="undoDelete()">Undo</button>
+      </div>
     </div>
-  </div>
 
-  <div class="undo-notification" id="undoNotification">
-    <span id="undoMessage"></span>
-    <button id="undoButton">Undo</button>
-  </div>
+    <script>
+      let imageList = [];
+      let songList = [];
+      let currentImageIndex = 0;
+      let currentSongIndex = 0;
+      let slideInterval = 5000;
+      let previewInterval;
+      let isPreviewPlaying = false;
+      let deletedSong = null;
+      let deletedImage = null;
+      let undoTimeout;
+      let endAfterImages = true;
+      let imageFadeOut = false;
+      let audioFadeInterval;
+      let imageFadeInterval;
+      let songChangeTimeout;
 
-  <input type="file" id="imageFileInput" accept="image/*" multiple style="display: none;">
-  <input type="file" id="songFileInput" accept="audio/*" multiple style="display: none;">
+      // Initialize when DOM is loaded
+      document.addEventListener('DOMContentLoaded', () => {
+        // Initialize default images
+        imageList = [
+          { url: '../assets/images/Frutiger Eco.jpeg', title: 'Frutiger Eco' },
+          { url: '../assets/images/Gallery.jpeg', title: 'Gallery' },
+          { url: '../assets/images/Life.jpeg', title: 'Life' },
+          { url: '../assets/images/Open.jpeg', title: 'Open' },
+          { url: '../assets/images/Vibes.jpeg', title: 'Vibes' }
+        ];
 
-  <script>
-    // Variables
-    let images = [];
-    let songs = [];
-    let currentImageIndex = 0;
-    let currentSongIndex = 0;
-    let isPreviewPlaying = false;
-    let imageInterval = 5000; // 5 seconds default
-    let imageIntervalId = null;
-    let audioFadeInterval = null;
-    let imageFadeInterval = null;
-    let imageFadeOut = true;
-    let endAfterAllSongs = false;
-    let deletedItem = null;
-    let activeTab = 'images';
-    let isFullscreen = false;
+        // Initialize default songs
+        songList = [
+          { url: '../assets/music/Mii Editor - Nintendo.mp3', title: 'Mii Editor - Nintendo' },
+          { url: '../assets/music/takeshi abo - LEASE.mp3', title: 'takeshi abo - LEASE' },
+          { url: '../assets/music/yume 2kki - lotus waters.mp3', title: 'yume 2kki - lotus waters' }
+        ];
 
-    // DOM Elements
-    document.addEventListener('DOMContentLoaded', function() {
-      initializePreview();
-      
-      // Tab switching
-      document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', function() {
-          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-          document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-          
-          this.classList.add('active');
-          activeTab = this.getAttribute('data-tab');
-          document.getElementById(activeTab + 'Tab').classList.add('active');
-          
-          updateAllDisplays();
-        });
+        renderSongList();
+        renderImageList();
+        initializePreview();
+        updateAllDisplays();
+        switchTab('preview'); // Ensure preview tab is active by default
       });
-      
-      // Fullscreen toggle
-      document.getElementById('fullscreenToggle').addEventListener('click', toggleFullscreen);
-      
-      // Preview control
-      document.getElementById('previewControl').addEventListener('click', startPreview);
-      document.getElementById('exitPreview').addEventListener('click', fadeOutAndStop);
-      document.getElementById('toggleEndCondition').addEventListener('click', toggleEndCondition);
-      
-      // Image controls
-      document.getElementById('importImages').addEventListener('click', () => document.getElementById('imageFileInput').click());
-      document.getElementById('imageFileInput').addEventListener('change', handleImageSelect);
-      document.getElementById('updateInterval').addEventListener('click', updateInterval);
-      document.getElementById('fadeToggle').addEventListener('change', function() {
-        imageFadeOut = this.checked;
-      });
-      
-      // Music controls
-      document.getElementById('importSongs').addEventListener('click', () => document.getElementById('songFileInput').click());
-      document.getElementById('songFileInput').addEventListener('change', handleSongSelect);
-      
-      // Undo functionality
-      document.getElementById('undoButton').addEventListener('click', undoDelete);
-    });
 
-    function initializePreview() {
-      // Initialize preview elements and event listeners
-      const previewAudio = document.getElementById('previewAudio');
-      
-      previewAudio.addEventListener('ended', function() {
-        playNextSong();
-      });
-    }
-
-    function switchTab(tabName) {
-      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-      
-      document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
-      document.getElementById(`${tabName}Tab`).classList.add('active');
-      
-      activeTab = tabName;
-      updateAllDisplays();
-    }
-
-    function toggleFullscreen() {
-      isFullscreen = !isFullscreen;
-      const container = document.querySelector('.container');
-      
-      if (isFullscreen) {
-        container.style.maxWidth = '100%';
-        container.style.height = '100vh';
-        document.getElementById('fullscreenToggle').textContent = 'Exit Fullscreen';
-      } else {
-        container.style.maxWidth = '1200px';
-        container.style.height = 'auto';
-        document.getElementById('fullscreenToggle').textContent = 'Toggle Fullscreen';
-      }
-    }
-
-    function startPreview() {
-      if (images.length === 0 || songs.length === 0) {
-        alert('Please import both images and songs before starting the preview.');
-        return;
-      }
-      
-      // Clear any existing intervals and timeouts
-      clearInterval(imageIntervalId);
-      clearInterval(audioFadeInterval);
-      clearTimeout(imageFadeInterval);
-      
-      // Reset indices if preview is not already playing
-      if (!isPreviewPlaying) {
+      function initializePreview() {
+        const previewAudio = document.getElementById("previewAudio");
+        const previewSlide = document.getElementById("previewSlide");
+        previewAudio.volume = 0.5;
+        previewSlide.style.display = "none";
+        previewSlide.style.opacity = 1;
+        previewSlide.style.transition = "";
+        isPreviewPlaying = false;
         currentImageIndex = 0;
         currentSongIndex = 0;
       }
-      
-      isPreviewPlaying = true;
-      document.getElementById('previewControl').textContent = 'Restart Preview';
-      document.getElementById('previewContainer').style.display = 'flex';
-      
-      // Start displaying images
-      updateAllDisplays();
-      imageIntervalId = setInterval(nextImage, imageInterval);
-      
-      // Start playing music
-      const previewAudio = document.getElementById('previewAudio');
-      previewAudio.volume = 1.0;
-      previewAudio.play();
-    }
 
-    function playNextSong() {
-      currentSongIndex++;
-      
-      if (currentSongIndex >= songs.length) {
-        if (endAfterAllSongs) {
-          fadeOutAndStop();
-          return;
-        } else {
-          currentSongIndex = 0;
-        }
-      }
-      
-      updateAllDisplays();
-      document.getElementById('previewAudio').play();
-    }
-
-    function toggleImageFade() {
-      imageFadeOut = !imageFadeOut;
-      document.getElementById('fadeToggle').checked = imageFadeOut;
-    }
-
-    function fadeOutAndStop() {
-      const previewAudio = document.getElementById('previewAudio');
-      const previewSlide = document.getElementById('previewSlide');
-      const previewControl = document.getElementById('previewControl');
-      const initialVolume = previewAudio.volume;
-      const fadeSteps = 30; // Number of steps for 3-second fade
-      const fadeInterval = 3000 / fadeSteps; // Interval between volume changes
-      const volumeStep = initialVolume / fadeSteps;
-      let currentStep = 0;
-
-      // Set the control text to Start Preview immediately to prevent flashing
-      previewControl.textContent = 'Start Preview';
-      
-      // Set isPreviewPlaying to false immediately to prevent updateAllDisplays from showing the image
-      isPreviewPlaying = false;
-      
-      // Always fade out audio
-      audioFadeInterval = setInterval(() => {
-        currentStep++;
-        if (currentStep >= fadeSteps) {
-          clearInterval(audioFadeInterval);
-          clearInterval(imageFadeInterval);
-          
-          // Hide the slide before stopping the preview
-          previewSlide.style.display = 'none';
-          
-          // Now stop the preview
+      function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(tab => {
+          tab.classList.remove('active');
+        });
+        document.querySelectorAll('.tabs button').forEach(button => {
+          button.classList.remove('active');
+        });
+        
+        document.getElementById(tabName).classList.add('active');
+        document.getElementById('tab-' + tabName).classList.add('active');
+        
+        if (isPreviewPlaying && tabName !== 'preview') {
           stopPreview();
-          
-          previewAudio.volume = initialVolume; // Reset volume for next play
-          if (imageFadeOut) {
-            previewSlide.style.opacity = 1; // Reset opacity
-          }
+        }
+      }
+
+      function toggleFullscreen() {
+        const container = document.getElementById('previewContainer');
+        if (!document.fullscreenElement) {
+          container.requestFullscreen();
         } else {
-          previewAudio.volume = initialVolume - (volumeStep * currentStep);
+          document.exitFullscreen();
         }
-      }, fadeInterval);
-
-      // Fade out image if option is enabled
-      if (imageFadeOut) {
-        previewSlide.style.transition = `opacity ${3}s ease-out`;
-        imageFadeInterval = setTimeout(() => {
-          previewSlide.style.opacity = 0;
-        }, 50); // Small delay to ensure the transition property is applied
       }
-    }
 
-    function stopPreview() {
-      clearInterval(imageIntervalId);
-      clearInterval(audioFadeInterval);
-      clearTimeout(imageFadeInterval);
-      
-      const previewAudio = document.getElementById('previewAudio');
-      previewAudio.pause();
-      
-      document.getElementById('previewContainer').style.display = 'none';
-      document.getElementById('previewControl').textContent = 'Start Preview';
-      
-      isPreviewPlaying = false;
-      currentImageIndex = 0;
-      currentSongIndex = 0;
-    }
-
-    function toggleEndCondition() {
-      endAfterAllSongs = !endAfterAllSongs;
-      const button = document.getElementById('toggleEndCondition');
-      button.textContent = endAfterAllSongs ? 'Loop Songs' : 'End After All Songs';
-    }
-
-    function updatePreviewDisplay() {
-      const previewSlide = document.getElementById('previewSlide');
-      if (images.length > 0 && currentImageIndex < images.length) {
-        previewSlide.src = URL.createObjectURL(images[currentImageIndex]);
-      }
-    }
-
-    function handleImageSelect(event) {
-      const files = event.target.files;
-      if (files.length > 0) {
-        for (let i = 0; i < files.length; i++) {
-          if (files[i].type.startsWith('image/')) {
-            images.push(files[i]);
-          }
+      function startPreview() {
+        if (imageList.length === 0 || songList.length === 0) {
+          alert('Please add both images and songs before starting the preview');
+          return;
         }
-        renderImageList();
-        updateAllDisplays();
-      }
-    }
 
-    function handleSongSelect(event) {
-      const files = event.target.files;
-      if (files.length > 0) {
-        for (let i = 0; i < files.length; i++) {
-          if (files[i].type.startsWith('audio/')) {
-            songs.push(files[i]);
-          }
-        }
-        renderSongList();
-        updateAllDisplays();
-      }
-    }
+        // Clear any existing intervals or timeouts first
+        clearInterval(previewInterval);
+        clearInterval(audioFadeInterval);
+        clearTimeout(imageFadeInterval);
+        clearTimeout(songChangeTimeout);
 
-    function renderImageList() {
-      const imageList = document.getElementById('imageList');
-      imageList.innerHTML = '';
-      
-      images.forEach((image, index) => {
-        const item = document.createElement('div');
-        item.className = 'file-item';
-        item.innerHTML = `
-          <div class="file-name">${image.name}</div>
-          <div class="file-actions">
-            <button class="move-up" ${index === 0 ? 'disabled' : ''}>↑</button>
-            <button class="move-down" ${index === images.length - 1 ? 'disabled' : ''}>↓</button>
-            <button class="delete">Delete</button>
-          </div>
-        `;
-        
-        item.querySelector('.move-up').addEventListener('click', () => moveItem('images', index, 'up'));
-        item.querySelector('.move-down').addEventListener('click', () => moveItem('images', index, 'down'));
-        item.querySelector('.delete').addEventListener('click', () => deleteItem('images', index));
-        
-        imageList.appendChild(item);
-      });
-    }
-
-    function renderSongList() {
-      const songList = document.getElementById('songList');
-      songList.innerHTML = '';
-      
-      songs.forEach((song, index) => {
-        const item = document.createElement('div');
-        item.className = 'file-item';
-        item.innerHTML = `
-          <div class="file-name">${song.name}</div>
-          <div class="file-actions">
-            <button class="move-up" ${index === 0 ? 'disabled' : ''}>↑</button>
-            <button class="move-down" ${index === songs.length - 1 ? 'disabled' : ''}>↓</button>
-            <button class="delete">Delete</button>
-          </div>
-        `;
-        
-        item.querySelector('.move-up').addEventListener('click', () => moveItem('songs', index, 'up'));
-        item.querySelector('.move-down').addEventListener('click', () => moveItem('songs', index, 'down'));
-        item.querySelector('.delete').addEventListener('click', () => deleteItem('songs', index));
-        
-        songList.appendChild(item);
-      });
-    }
-
-    function updateAllDisplays() {
-      // Update the image display in the Image tab
-      const imageSlide = document.getElementById('imageSlide');
-      if (images.length > 0 && currentImageIndex < images.length) {
-        imageSlide.src = URL.createObjectURL(images[currentImageIndex]);
-      } else {
-        imageSlide.src = '';
-      }
-      
-      // Update the preview display if preview is playing
-      if (isPreviewPlaying) {
         const previewSlide = document.getElementById('previewSlide');
-        if (images.length > 0 && currentImageIndex < images.length) {
-          previewSlide.src = URL.createObjectURL(images[currentImageIndex]);
-          previewSlide.style.display = 'block';
-        }
-      }
-      
-      // Update the audio source
-      const previewAudio = document.getElementById('previewAudio');
-      if (songs.length > 0 && currentSongIndex < songs.length) {
-        previewAudio.src = URL.createObjectURL(songs[currentSongIndex]);
-      }
-    }
+        const previewAudio = document.getElementById('previewAudio');
+        const previewControl = document.getElementById('previewControl');
 
-    function nextImage() {
-      currentImageIndex++;
-      if (currentImageIndex >= images.length) {
+        // Reset indices to ensure we start from the beginning of the lists
         currentImageIndex = 0;
-      }
-      updateAllDisplays();
-    }
-
-    function prevImage() {
-      currentImageIndex--;
-      if (currentImageIndex < 0) {
-        currentImageIndex = images.length - 1;
-      }
-      updateAllDisplays();
-    }
-
-    function updateInterval() {
-      const input = document.getElementById('intervalInput');
-      const value = parseInt(input.value);
-      
-      if (value >= 1) {
-        imageInterval = value * 1000;
+        currentSongIndex = 0;
         
-        // Update the interval if preview is playing
-        if (isPreviewPlaying) {
-          clearInterval(imageIntervalId);
-          imageIntervalId = setInterval(nextImage, imageInterval);
+        // Update displays with the current indices
+        updatePreviewDisplay();
+        
+        previewSlide.style.display = 'block';
+        previewSlide.style.opacity = 1;
+        previewSlide.style.transition = '';
+        
+        // Set the audio source and play
+        if (songList.length > 0) {
+          previewAudio.src = songList[currentSongIndex].url;
+          previewAudio.onended = function() {
+            playNextSong();
+          };
+          previewAudio.play();
+        }
+        
+        isPreviewPlaying = true;
+        previewControl.textContent = 'Stop Preview';
+
+        previewInterval = setInterval(() => {
+          if (endAfterImages) {
+            if (currentImageIndex >= imageList.length - 1) {
+              fadeOutAndStop();
+              return;
+            }
+          } else {
+            if (currentSongIndex >= songList.length - 1 && previewAudio.ended) {
+              fadeOutAndStop();
+              return;
+            }
+          }
+          nextImage();
+          updatePreviewDisplay();
+        }, slideInterval);
+      }
+
+      function playNextSong() {
+        if (!isPreviewPlaying) return;
+        
+        currentSongIndex = (currentSongIndex + 1) % songList.length;
+        const previewAudio = document.getElementById('previewAudio');
+        
+        if (currentSongIndex < songList.length) {
+          previewAudio.src = songList[currentSongIndex].url;
+          previewAudio.onended = function() {
+            playNextSong();
+          };
+          previewAudio.play();
+          
+          // If we're set to end after songs and this is the last song
+          if (!endAfterImages && currentSongIndex === songList.length - 1) {
+            // Wait for the song to finish and then fade out
+            previewAudio.onended = function() {
+              fadeOutAndStop();
+            };
+          }
         }
       }
-    }
 
-    function showUndoNotification(message) {
-      const notification = document.getElementById('undoNotification');
-      const messageElement = document.getElementById('undoMessage');
-      
-      messageElement.textContent = message;
-      notification.style.display = 'block';
-      
-      // Hide after 5 seconds if not clicked
-      setTimeout(() => {
-        hideUndoNotification();
-      }, 5000);
-    }
+      function toggleImageFade() {
+        imageFadeOut = !imageFadeOut;
+        const button = document.getElementById('imageFadeToggle');
+        button.textContent = imageFadeOut ? 'Yes' : 'No';
+      }
 
-    function hideUndoNotification() {
-      document.getElementById('undoNotification').style.display = 'none';
-    }
+      function fadeOutAndStop() {
+        const previewAudio = document.getElementById('previewAudio');
+        const previewSlide = document.getElementById('previewSlide');
+        const previewControl = document.getElementById('previewControl');
+        const initialVolume = previewAudio.volume;
+        const fadeSteps = 30; // Number of steps for 3-second fade
+        const fadeInterval = 3000 / fadeSteps; // Interval between volume changes
+        const volumeStep = initialVolume / fadeSteps;
+        let currentStep = 0;
 
-    function deleteItem(type, index) {
-      // Store the deleted item for potential undo
-      deletedItem = {
-        type: type,
-        item: type === 'images' ? images[index] : songs[index],
-        index: index,
-        originalIndex: index
-      };
-      
-      // Remove the item from the array
-      if (type === 'images') {
-        images.splice(index, 1);
+        // Set the control text to Start Preview immediately to prevent flashing
+        previewControl.textContent = 'Start Preview';
+        
+        // Always fade out audio
+        audioFadeInterval = setInterval(() => {
+          currentStep++;
+          if (currentStep >= fadeSteps) {
+            clearInterval(audioFadeInterval);
+            clearInterval(imageFadeInterval);
+            
+            // Hide the slide before stopping the preview
+            previewSlide.style.display = 'none';
+            
+            // Now stop the preview
+            stopPreview();
+            
+            previewAudio.volume = initialVolume; // Reset volume for next play
+            if (imageFadeOut) {
+              previewSlide.style.opacity = 1; // Reset opacity
+            }
+          } else {
+            previewAudio.volume = initialVolume - (volumeStep * currentStep);
+          }
+        }, fadeInterval);
+
+        // Fade out image if option is enabled
+        if (imageFadeOut) {
+          previewSlide.style.transition = `opacity ${3}s ease-out`;
+          imageFadeInterval = setTimeout(() => {
+            previewSlide.style.opacity = 0;
+          }, 50); // Small delay to ensure the transition property is applied
+        }
+        
+        // Set isPreviewPlaying to false immediately to prevent updateAllDisplays from showing the image
+        isPreviewPlaying = false;
+      }
+
+      function stopPreview() {
+        clearInterval(previewInterval);
+        clearInterval(audioFadeInterval);
+        clearTimeout(imageFadeInterval);
+        clearTimeout(songChangeTimeout);
+        
+        const previewSlide = document.getElementById('previewSlide');
+        const previewAudio = document.getElementById('previewAudio');
+        const previewControl = document.getElementById('previewControl');
+        
+        previewSlide.style.display = 'none';
+        previewAudio.pause();
+        previewAudio.currentTime = 0;
+        previewAudio.onended = null; // Remove the onended event handler
+        
+        isPreviewPlaying = false;
+        previewControl.textContent = 'Start Preview';
+        
+        // Reset indices
+        currentImageIndex = 0;
+        currentSongIndex = 0;
+        
+        updateAllDisplays();
+      }
+
+      function toggleEndCondition() {
+        endAfterImages = !endAfterImages;
+        const button = document.getElementById('endConditionToggle');
+        button.textContent = endAfterImages ? 'Images' : 'Songs';
+      }
+
+      function updatePreviewDisplay() {
+        const previewSlide = document.getElementById('previewSlide');
+        if (currentImageIndex < imageList.length) {
+          previewSlide.src = imageList[currentImageIndex].url;
+        }
+      }
+
+      function handleImageSelect(event) {
+        const files = event.target.files;
+        for (let file of files) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            imageList.push({
+              url: e.target.result,
+              title: file.name
+            });
+            renderImageList();
+            updateAllDisplays();
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+
+      function handleFileSelect(event) {
+        const files = event.target.files;
+        for (let file of files) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            songList.push({
+              url: e.target.result,
+              title: file.name
+            });
+            renderSongList();
+            updateAllDisplays();
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+
+      function renderImageList() {
+        const container = document.getElementById('image-items-container');
+        container.innerHTML = '';
+        imageList.forEach((image, index) => {
+          const item = document.createElement('div');
+          item.className = 'image-item';
+          item.innerHTML = `
+            <div class="item-controls">
+              <button class="move-button" onclick="moveItem('image', ${index}, -1)" ${index === 0 ? 'disabled' : ''}>↑</button>
+              <button class="move-button" onclick="moveItem('image', ${index}, 1)" ${index === imageList.length - 1 ? 'disabled' : ''}>↓</button>
+            </div>
+            <img src="${image.url}" alt="${image.title}">
+            <span class="song-name">${image.title}</span>
+            <button class="delete-button" onclick="deleteImage(${index})">×</button>
+          `;
+          container.appendChild(item);
+        });
+      }
+
+      function renderSongList() {
+        const container = document.getElementById('song-items-container');
+        container.innerHTML = '';
+        songList.forEach((song, index) => {
+          const item = document.createElement('div');
+          item.className = 'song-item';
+          item.innerHTML = `
+            <div class="item-controls">
+              <button class="move-button" onclick="moveItem('song', ${index}, -1)" ${index === 0 ? 'disabled' : ''}>↑</button>
+              <button class="move-button" onclick="moveItem('song', ${index}, 1)" ${index === songList.length - 1 ? 'disabled' : ''}>↓</button>
+            </div>
+            <span class="song-name">${song.title}</span>
+            <button class="delete-button" onclick="deleteSong(${index})">×</button>
+          `;
+          container.appendChild(item);
+        });
+      }
+
+      function updateAllDisplays() {
+        const imageSlide = document.getElementById('imageSlide');
+        const previewSlide = document.getElementById('previewSlide');
+        const previewAudio = document.getElementById('previewAudio');
+
+        if (imageList.length > 0) {
+          // Ensure currentImageIndex is valid
+          if (currentImageIndex >= imageList.length) {
+            currentImageIndex = 0;
+          }
+          const currentImage = imageList[currentImageIndex];
+          imageSlide.src = currentImage.url;
+          if (!isPreviewPlaying || previewSlide.style.display === 'none') {
+            previewSlide.src = currentImage.url;
+          }
+        }
+
+        if (songList.length > 0 && !isPreviewPlaying) {
+          // Ensure currentSongIndex is valid
+          if (currentSongIndex >= songList.length) {
+            currentSongIndex = 0;
+          }
+          const currentSong = songList[currentSongIndex];
+          previewAudio.src = currentSong.url;
+        }
+      }
+
+      function prevImage() {
+        currentImageIndex = (currentImageIndex - 1 + imageList.length) % imageList.length;
+        updateAllDisplays();
+      }
+
+      function nextImage() {
+        currentImageIndex = (currentImageIndex + 1) % imageList.length;
+        updateAllDisplays();
+      }
+
+      function updateInterval(value) {
+        slideInterval = value * 1000;
+        document.getElementById('intervalValue').textContent = value + ' seconds';
+        if (isPreviewPlaying) {
+          clearInterval(previewInterval);
+          previewInterval = setInterval(() => {
+            if (endAfterImages) {
+              if (currentImageIndex >= imageList.length - 1) {
+                fadeOutAndStop();
+                return;
+              }
+            }
+            nextImage();
+            updatePreviewDisplay();
+          }, slideInterval);
+        }
+      }
+
+      function showUndoNotification(message, type) {
+        clearTimeout(undoTimeout);
+        const notification = document.getElementById(type + '-undo-notification');
+        document.getElementById(type + '-undo-message').textContent = message;
+        notification.classList.add('show');
+        undoTimeout = setTimeout(() => {
+          hideUndoNotification(type);
+          if (type === 'song') {
+            deletedSong = null;
+          } else {
+            deletedImage = null;
+          }
+        }, 5000);
+      }
+
+      function hideUndoNotification(type) {
+        const notification = document.getElementById(type + '-undo-notification');
+        notification.classList.remove('show');
+      }
+
+      function deleteImage(index) {
+        deletedImage = {
+          item: imageList[index],
+          originalIndex: index
+        };
+        imageList.splice(index, 1);
         renderImageList();
         
-        // Update currentImageIndex if needed
-        if (currentImageIndex >= images.length) {
-          currentImageIndex = images.length > 0 ? images.length - 1 : 0;
+        // Update currentImageIndex if necessary
+        if (index < currentImageIndex) {
+          currentImageIndex--;
         }
-      } else {
-        songs.splice(index, 1);
-        renderSongList();
-        
-        // Update currentSongIndex if needed
-        if (currentSongIndex >= songs.length) {
-          currentSongIndex = songs.length > 0 ? songs.length - 1 : 0;
-        }
-      }
-      
-      updateAllDisplays();
-      showUndoNotification(`${type === 'images' ? 'Image' : 'Song'} deleted. Click Undo to restore.`);
-    }
-
-    function undoDelete() {
-      if (deletedItem) {
-        const { type, item, originalIndex } = deletedItem;
-        
-        // Insert the item back at its original position or at the end if the array is shorter now
-        const targetIndex = Math.min(originalIndex, type === 'images' ? images.length : songs.length);
-        
-        if (type === 'images') {
-          images.splice(targetIndex, 0, item);
-          renderImageList();
-        } else {
-          songs.splice(targetIndex, 0, item);
-          renderSongList();
+        if (currentImageIndex >= imageList.length) {
+          currentImageIndex = Math.max(0, imageList.length - 1);
         }
         
         updateAllDisplays();
-        hideUndoNotification();
-        deletedItem = null;
+        showUndoNotification(`You deleted "${deletedImage.item.title}"`, 'image');
       }
-    }
 
-    function moveItem(type, index, direction) {
-      const newIndex = direction === 'up' ? index - 1 : index + 1;
-      const array = type === 'images' ? images : songs;
-      
-      // Check if the move is valid
-      if (newIndex < 0 || newIndex >= array.length) return;
-      
-      // Swap the items
-      [array[index], array[newIndex]] = [array[newIndex], array[index]];
-      
-      // Update the current index if it was one of the moved items
-      if (type === 'images') {
-        if (currentImageIndex === index) {
-          currentImageIndex = newIndex;
-        } else if (currentImageIndex === newIndex) {
-          currentImageIndex = index;
-        }
-        renderImageList();
-      } else {
-        if (currentSongIndex === index) {
-          currentSongIndex = newIndex;
-        } else if (currentSongIndex === newIndex) {
-          currentSongIndex = index;
-        }
+      function deleteSong(index) {
+        deletedSong = {
+          item: songList[index],
+          originalIndex: index
+        };
+        songList.splice(index, 1);
         renderSongList();
+        
+        // Update currentSongIndex if necessary
+        if (index < currentSongIndex) {
+          currentSongIndex--;
+        }
+        if (currentSongIndex >= songList.length) {
+          currentSongIndex = Math.max(0, songList.length - 1);
+        }
+        
+        updateAllDisplays();
+        showUndoNotification(`You deleted "${deletedSong.item.title}"`, 'song');
       }
-      
-      updateAllDisplays();
-    }
 
-    function downloadAsVideo() {
-      // Placeholder for future video export functionality
-      alert('Video export functionality coming soon!');
-    }
-  </script>
+      function undoDelete() {
+        // Check which tab is active to determine which undo to perform
+        const imagesTabActive = document.getElementById('images').classList.contains('active');
+        const musicTabActive = document.getElementById('music').classList.contains('active');
+        
+        if (imagesTabActive && deletedImage) {
+          // Restore image to its original position
+          imageList.splice(deletedImage.originalIndex, 0, deletedImage.item);
+          renderImageList();
+          hideUndoNotification('image');
+          deletedImage = null;
+          updateAllDisplays();
+        } else if (musicTabActive && deletedSong) {
+          // Restore song to its original position
+          songList.splice(deletedSong.originalIndex, 0, deletedSong.item);
+          renderSongList();
+          hideUndoNotification('song');
+          deletedSong = null;
+          updateAllDisplays();
+        }
+      }
+
+      function moveItem(type, index, direction) {
+        const newIndex = index + direction;
+        
+        if (type === 'image') {
+          if (newIndex >= 0 && newIndex < imageList.length) {
+            const item = imageList.splice(index, 1)[0];
+            imageList.splice(newIndex, 0, item);
+            renderImageList();
+            
+            // Update current image index if necessary
+            if (index === currentImageIndex) {
+              currentImageIndex = newIndex;
+            } else if (index < currentImageIndex && newIndex >= currentImageIndex) {
+              currentImageIndex--;
+            } else if (index > currentImageIndex && newIndex <= currentImageIndex) {
+              currentImageIndex++;
+            }
+            
+            updateAllDisplays();
+          }
+        } else if (type === 'song') {
+          if (newIndex >= 0 && newIndex < songList.length) {
+            const item = songList.splice(index, 1)[0];
+            songList.splice(newIndex, 0, item);
+            renderSongList();
+            
+            // Update current song index if necessary
+            if (index === currentSongIndex) {
+              currentSongIndex = newIndex;
+            } else if (index < currentSongIndex && newIndex >= currentSongIndex) {
+              currentSongIndex--;
+            } else if (index > currentSongIndex && newIndex <= currentSongIndex) {
+              currentSongIndex++;
+            }
+            
+            updateAllDisplays();
+          }
+        }
+      }
+
+      function downloadAsVideo() {
+        alert('This feature is not implemented yet.');
+      }
+    </script>
+  </div>
 </body>
 </html>
