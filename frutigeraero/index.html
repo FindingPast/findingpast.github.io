@@ -502,6 +502,14 @@
       document.getElementById(tabName).classList.add('active');
       document.getElementById('tab-' + tabName).classList.add('active');
       
+      // Clear image tab interval when switching away from images tab
+      clearInterval(imageTabInterval);
+      
+      // Start image tab interval when switching to images tab
+      if (tabName === 'images') {
+        startImageTabSlideshow();
+      }
+      
       if (isPreviewPlaying && tabName !== 'preview') {
         stopPreview();
       }
@@ -791,6 +799,8 @@
     function updateInterval(value) {
       slideInterval = value * 1000;
       document.getElementById('intervalValue').textContent = value + ' seconds';
+      
+      // Update both intervals
       if (isPreviewPlaying) {
         clearInterval(previewInterval);
         previewInterval = setInterval(() => {
@@ -805,24 +815,9 @@
         }, slideInterval);
       }
       
-      // Clear image tab interval when switching away from images tab
-      if (tabName !== 'images') {
-        clearInterval(imageTabInterval);
-      } else {
-        // Start image tab interval when switching to images tab
+      // Also update the image tab interval if we're on the images tab
+      if (document.getElementById('images').classList.contains('active')) {
         startImageTabSlideshow();
-      }
-    }
-
-    function startImageTabSlideshow() {
-      // Clear any existing interval first
-      clearInterval(imageTabInterval);
-      
-      // Only start if we have images
-      if (imageList.length > 1) {
-        imageTabInterval = setInterval(() => {
-          nextImage();
-        }, slideInterval);
       }
     }
 
