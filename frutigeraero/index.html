@@ -561,10 +561,12 @@
             return;
           }
         } else {
-          if (currentSongIndex >= songList.length - 1 && previewAudio.ended) {
-            fadeOutAndStop();
-            return;
-          }
+          // For song-based ending, we'll let the playNextSong function handle it
+          // Remove this check to avoid double-triggering the end condition
+          // if (currentSongIndex >= songList.length - 1 && previewAudio.ended) {
+          //   fadeOutAndStop();
+          //   return;
+          // }
         }
         nextImage();
         updatePreviewDisplay();
@@ -573,6 +575,12 @@
 
     function playNextSong() {
       if (!isPreviewPlaying) return;
+      
+      // If there's only one song and we're set to end after songs, end the preview
+      if (songList.length === 1 && !endAfterImages) {
+        fadeOutAndStop();
+        return;
+      }
       
       currentSongIndex = (currentSongIndex + 1) % songList.length;
       const previewAudio = document.getElementById('previewAudio');
