@@ -956,7 +956,168 @@
     }
 
     function downloadAsVideo() {
-      alert('This feature is not implemented yet.');
+      if (imageList.length === 0 || songList.length === 0) {
+        alert('Please add both images and songs before creating a video');
+        return;
+      }
+    
+      // Create a canvas element
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Set canvas size - using a standard 16:9 ratio
+      canvas.width = 1280;
+      canvas.height = 720;
+      
+      // Check if MediaRecorder is supported
+      if (!window.MediaRecorder) {
+        alert('Your browser does not support the MediaRecorder API. Please try a modern browser like Chrome or Firefox.');
+        return;
+      }
+      
+      // Check if the browser supports the WebM format with VP9 codec
+      let mimeType = 'video/webm;codecs=vp9';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        // Fallback to VP8 which has wider support
+        mimeType = 'video/webm;codecs=vp8';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          // Final fallback
+          mimeType = 'video/webm';
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            alert('Your browser does not support WebM video format. Please try a modern browser like Chrome or Firefox.');
+            return;
+          }
+        }
+      }
+      
+      // Create a MediaRecorder to capture the canvas
+      const stream = canvas.captureStream(30); // 30 FPS
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: mimeType,
+        videoBitsPerSecond: 5000000 // 5 Mbps
+      });
+      
+      // Array to store video chunks
+      const chunks = [];
+      
+      // Event listener for when data is available
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+      
+      // Event listener for when recording stops
+      mediaRecorder.onstop = () => {
+        // Create a blob from the chunks
+        const blob = new Blob(chunks, { type: mimeType });
+        
+        // Create a download link
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'slideshow.webm';
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }, 100);
+      };
+      
+      // Show a loading message
+      alert('Creating video... This may take a moment.');
+      
+      // Load all images first
+      const imagePromises = imageList.map(img => {
+        return new Promise((resolve, reject) => {
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = () => {
+            console.error('Failed to load image:', img.url);
+            // Resolve with a placeholder instead of rejecting to avoid stopping the whole process
+            const placeholder = new Image();
+            placeholder.width = 1280;
+            placeholder.height = 720;
+            resolve(placeholder);
+          };
+          image.src = img.url;
+        });
+      });
+      
+      // When all images are loaded, start the animation
+      Promise.all(imagePromises).then(images => {
+        // Start recording
+        mediaRecorder.start();
+        
+        let currentFrame = 0;
+        const framesPerImage = Math.max((slideInterval / 1000) * 30, 30); // At least 1 second per image at 30 FPS
+        const totalFrames = framesPerImage * images.length;
+        
+        // Function to draw the current frame
+        function drawFrame() {
+          // Clear the canvas
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          // Calculate which image to show
+          const imageIndex = Math.floor(currentFrame / framesPerImage);
+          
+          if (imageIndex < images.length) {
+            // Draw the image centered and scaled to fit
+            const img = images[imageIndex];
+            
+            // Handle images that might not have loaded correctly
+            if (img.width && img.height) {
+              const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+              const x = (canvas.width - img.width * scale) / 2;
+              const y = (canvas.height - img.height * scale) / 2;
+              
+              ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+            } else {
+              // Draw a placeholder for failed images
+              ctx.fillStyle = '#f0f0f0';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.fillStyle = '#666666';
+              ctx.font = '30px Arial';
+              ctx.textAlign = 'center';
+              ctx.fillText('Image could not be loaded', canvas.width/2, canvas.height/2);
+            }
+            
+            // Increment frame counter
+            currentFrame++;
+            
+            // If we still have frames to draw, continue
+            if (currentFrame < totalFrames) {
+              requestAnimationFrame(drawFrame);
+            } else {
+              // Stop recording when all frames are drawn
+              try {
+                mediaRecorder.stop();
+              } catch (e) {
+                console.error('Error stopping media recorder:', e);
+                alert('There was an error creating the video. Please try again.');
+              }
+            }
+          } else {
+            // Stop recording if we've gone through all images
+            try {
+              mediaRecorder.stop();
+            } catch (e) {
+              console.error('Error stopping media recorder:', e);
+              alert('There was an error creating the video. Please try again.');
+            }
+          }
+        }
+        
+        // Start drawing frames
+        drawFrame();
+      }).catch(error => {
+        console.error('Error creating video:', error);
+        alert('There was an error creating the video. Please try again.');
+      });
     }
   </script>
 </body>
