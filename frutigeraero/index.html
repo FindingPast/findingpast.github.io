@@ -990,8 +990,20 @@
         }
       }
       
+      // Create an audio element to play the song
+      const audio = new Audio();
+      audio.src = songList[currentSongIndex].url;
+      audio.loop = true; // Loop the audio in case it's shorter than the video
+      
       // Create a MediaRecorder to capture the canvas
       const stream = canvas.captureStream(30); // 30 FPS
+      
+      // Add the audio track to the stream
+      const audioTracks = audio.captureStream().getAudioTracks();
+      if (audioTracks.length > 0) {
+        stream.addTrack(audioTracks[0]);
+      }
+      
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: mimeType,
         videoBitsPerSecond: 5000000 // 5 Mbps
@@ -1024,6 +1036,8 @@
         setTimeout(() => {
           document.body.removeChild(a);
           window.URL.revokeObjectURL(url);
+          audio.pause();
+          audio.srcObject = null;
         }, 100);
       };
       
@@ -1049,6 +1063,9 @@
       
       // When all images are loaded, start the animation
       Promise.all(imagePromises).then(images => {
+        // Start playing audio
+        audio.play();
+        
         // Start recording
         mediaRecorder.start();
         
@@ -1058,8 +1075,8 @@
         
         // Function to draw the current frame
         function drawFrame() {
-          // Clear the canvas
-          ctx.fillStyle = '#ffffff';
+          // Clear the canvas with black background
+          ctx.fillStyle = '#000000';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           
           // Calculate which image to show
@@ -1078,7 +1095,7 @@
               ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
             } else {
               // Draw a placeholder for failed images
-              ctx.fillStyle = '#f0f0f0';
+              ctx.fillStyle = '#333333';
               ctx.fillRect(0, 0, canvas.width, canvas.height);
               ctx.fillStyle = '#666666';
               ctx.font = '30px Arial';
@@ -1096,18 +1113,22 @@
               // Stop recording when all frames are drawn
               try {
                 mediaRecorder.stop();
+                audio.pause();
               } catch (e) {
                 console.error('Error stopping media recorder:', e);
                 alert('There was an error creating the video. Please try again.');
+                audio.pause();
               }
             }
           } else {
             // Stop recording if we've gone through all images
             try {
               mediaRecorder.stop();
+              audio.pause();
             } catch (e) {
               console.error('Error stopping media recorder:', e);
               alert('There was an error creating the video. Please try again.');
+              audio.pause();
             }
           }
         }
