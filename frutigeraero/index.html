@@ -998,16 +998,43 @@
       // Create a MediaRecorder to capture the canvas
       const stream = canvas.captureStream(30); // 30 FPS
       
-      // Add the audio track to the stream
-      const audioTracks = audio.captureStream().getAudioTracks();
-      if (audioTracks.length > 0) {
-        stream.addTrack(audioTracks[0]);
+      // Try to add the audio track to the stream if supported
+      let hasAudio = false;
+      try {
+        if (typeof audio.captureStream === 'function') {
+          const audioTracks = audio.captureStream().getAudioTracks();
+          if (audioTracks.length > 0) {
+            stream.addTrack(audioTracks[0]);
+            hasAudio = true;
+          }
+        } else if (typeof audio.mozCaptureStream === 'function') {
+          // Firefox fallback
+          const audioTracks = audio.mozCaptureStream().getAudioTracks();
+          if (audioTracks.length > 0) {
+            stream.addTrack(audioTracks[0]);
+            hasAudio = true;
+          }
+        }
+      } catch (e) {
+        console.error('Error capturing audio stream:', e);
+        // Continue without audio if there's an error
       }
       
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: mimeType,
-        videoBitsPerSecond: 5000000 // 5 Mbps
-      });
+      if (!hasAudio) {
+        console.warn('Audio capture is not supported in this browser. The video will be created without audio.');
+      }
+      
+      let mediaRecorder;
+      try {
+        mediaRecorder = new MediaRecorder(stream, {
+          mimeType: mimeType,
+          videoBitsPerSecond: 5000000 // 5 Mbps
+        });
+      } catch (e) {
+        console.error('Error creating MediaRecorder:', e);
+        alert('There was an error creating the video recorder. Please try again or use a different browser.');
+        return;
+      }
       
       // Array to store video chunks
       const chunks = [];
@@ -1064,10 +1091,20 @@
       // When all images are loaded, start the animation
       Promise.all(imagePromises).then(images => {
         // Start playing audio
-        audio.play();
+        audio.play().catch(e => {
+          console.error('Error playing audio:', e);
+          // Continue without audio if there's an error
+        });
         
         // Start recording
-        mediaRecorder.start();
+        try {
+          mediaRecorder.start();
+        } catch (e) {
+          console.error('Error starting media recorder:', e);
+          alert('There was an error starting the video recording. Please try again.');
+          audio.pause();
+          return;
+        }
         
         let currentFrame = 0;
         const framesPerImage = Math.max((slideInterval / 1000) * 30, 30); // At least 1 second per image at 30 FPS
