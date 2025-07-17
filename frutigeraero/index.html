@@ -1150,11 +1150,16 @@
                 // Calculate how far we are through this image's display time
                 const imageStartFrame = imageIndex * framesPerImage;
                 const framePositionInImage = currentFrame - imageStartFrame;
-                const imageProgress = framePositionInImage / framesPerImage;
                 
-                // Start fading out at 80% through the image's display time
-                if (imageProgress > 0.8) {
-                  opacity = 1 - ((imageProgress - 0.8) * 5); // Scale to fade out over the last 20%
+                // Calculate frames needed for a 3-second fade (at 30 FPS)
+                const fadeFrames = 3 * 30; // 3 seconds * 30 FPS = 90 frames
+                
+                // Start fading when we're fadeFrames frames from the end
+                const framesRemaining = framesPerImage - framePositionInImage;
+                
+                if (framesRemaining <= fadeFrames) {
+                  // Linear fade from 1 to 0 over fadeFrames frames
+                  opacity = framesRemaining / fadeFrames;
                 }
               }
               
