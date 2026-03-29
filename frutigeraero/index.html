@@ -23,31 +23,36 @@
     </nav>
 
     <main class="page-content">
-      <section id="preview" class="tab-panel active" aria-labelledby="preview-tab">
+      <section id="preview" class="tab-panel active">
         <div class="stage-card">
           <div id="previewContainer" class="preview-stage">
-            <img id="previewSlide" class="preview-media hidden" alt="Preview slideshow image">
+            <video
+              id="previewVideo"
+              class="preview-video hidden"
+              controls
+              playsinline
+              preload="metadata"
+            ></video>
+
             <div id="previewEmptyState" class="stage-empty">
-              Preview is ready. Press Start Preview.
+              Preview not generated yet. Press Generate Preview.
             </div>
           </div>
         </div>
 
-        <audio id="previewAudio" class="visually-hidden" preload="metadata"></audio>
-
         <div class="controls-row">
           <button type="button" id="fullscreenButton">Fullscreen</button>
-          <button type="button" id="previewControl">Start Preview</button>
+          <button type="button" id="previewControl">Generate Preview</button>
           <button type="button" id="downloadButton">Download Video</button>
         </div>
 
         <div class="inline-card control-chip-row">
-          <span>Preview will end after going through all</span>
+          <span>Video will end after going through all</span>
           <button type="button" id="endConditionToggle">Images</button>
         </div>
       </section>
 
-      <section id="images" class="tab-panel" aria-labelledby="images-tab">
+      <section id="images" class="tab-panel">
         <div class="stage-card image-stage-card">
           <div class="image-square-wrapper">
             <img id="imageSlide" class="slideshow-media hidden" alt="Current image selection">
@@ -79,6 +84,7 @@
           <button type="button" class="import-button" id="imageImportButton">
             Import Images
           </button>
+
           <input
             type="file"
             id="imageFileInput"
@@ -94,13 +100,14 @@
         </div>
       </section>
 
-      <section id="music" class="tab-panel" aria-labelledby="music-tab">
+      <section id="music" class="tab-panel">
         <div class="list-card">
           <div id="songItemsContainer" class="media-list"></div>
 
           <button type="button" class="import-button" id="songImportButton">
             Import Songs
           </button>
+
           <input
             type="file"
             id="songFileInput"
