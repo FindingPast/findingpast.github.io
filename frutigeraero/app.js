@@ -130,13 +130,8 @@ function switchTab(tabName) {
   const targetPanel = document.getElementById(tabName);
   const targetButton = document.querySelector(`.tab-button[data-tab="${tabName}"]`);
 
-  if (targetPanel) {
-    targetPanel.classList.add("active");
-  }
-
-  if (targetButton) {
-    targetButton.classList.add("active");
-  }
+  if (targetPanel) targetPanel.classList.add("active");
+  if (targetButton) targetButton.classList.add("active");
 
   clearTimer("imageTabInterval");
 
@@ -157,9 +152,7 @@ function toggleFullscreen() {
 }
 
 async function handlePreviewButtonClick() {
-  if (state.exportInProgress) {
-    return;
-  }
+  if (state.exportInProgress) return;
 
   if (state.imageList.length === 0 || state.songList.length === 0) {
     alert("Please add at least one image and one song before generating the preview.");
@@ -175,9 +168,7 @@ async function handlePreviewButtonClick() {
 }
 
 async function handleDownloadButtonClick() {
-  if (state.exportInProgress) {
-    return;
-  }
+  if (state.exportInProgress) return;
 
   if (state.imageList.length === 0 || state.songList.length === 0) {
     alert("Please add at least one image and one song before downloading a video.");
@@ -193,9 +184,7 @@ async function handleDownloadButtonClick() {
 }
 
 async function playRenderedPreview() {
-  if (!state.renderedPreview.url) {
-    return;
-  }
+  if (!state.renderedPreview.url) return;
 
   elements.previewVideo.currentTime = 0;
 
@@ -209,13 +198,8 @@ async function playRenderedPreview() {
 function startImageTabSlideshow() {
   clearTimer("imageTabInterval");
 
-  if (!elements.imagesPanel.classList.contains("active")) {
-    return;
-  }
-
-  if (state.imageList.length <= 1) {
-    return;
-  }
+  if (!elements.imagesPanel.classList.contains("active")) return;
+  if (state.imageList.length <= 1) return;
 
   state.timers.imageTabInterval = setInterval(() => {
     nextImage();
@@ -223,18 +207,14 @@ function startImageTabSlideshow() {
 }
 
 function prevImage() {
-  if (state.imageList.length === 0) {
-    return;
-  }
+  if (state.imageList.length === 0) return;
 
   state.currentImageIndex = (state.currentImageIndex - 1 + state.imageList.length) % state.imageList.length;
   updateImageDisplay();
 }
 
 function nextImage() {
-  if (state.imageList.length === 0) {
-    return;
-  }
+  if (state.imageList.length === 0) return;
 
   state.currentImageIndex = (state.currentImageIndex + 1) % state.imageList.length;
   updateImageDisplay();
@@ -242,10 +222,7 @@ function nextImage() {
 
 function updateInterval(value) {
   const seconds = Number(value);
-
-  if (!Number.isFinite(seconds) || seconds < 1) {
-    return;
-  }
+  if (!Number.isFinite(seconds) || seconds < 1) return;
 
   state.slideIntervalMs = seconds * 1000;
   elements.intervalValue.textContent = `${seconds} seconds`;
@@ -271,10 +248,7 @@ function toggleImageFade() {
 
 function handleImageSelect(event) {
   const files = Array.from(event.target.files || []);
-
-  if (files.length === 0) {
-    return;
-  }
+  if (files.length === 0) return;
 
   files.forEach(file => {
     const url = URL.createObjectURL(file);
@@ -296,10 +270,7 @@ function handleImageSelect(event) {
 
 function handleSongSelect(event) {
   const files = Array.from(event.target.files || []);
-
-  if (files.length === 0) {
-    return;
-  }
+  if (files.length === 0) return;
 
   files.forEach(file => {
     const url = URL.createObjectURL(file);
@@ -423,9 +394,7 @@ function createMoveButton(label, disabled, onClick) {
 }
 
 function deleteImage(index) {
-  if (!state.imageList[index]) {
-    return;
-  }
+  if (!state.imageList[index]) return;
 
   state.deletedImage = {
     item: state.imageList[index],
@@ -450,9 +419,7 @@ function deleteImage(index) {
 }
 
 function deleteSong(index) {
-  if (!state.songList[index]) {
-    return;
-  }
+  if (!state.songList[index]) return;
 
   state.deletedSong = {
     item: state.songList[index],
@@ -494,9 +461,7 @@ function moveItem(type, index, direction) {
   const currentIndexKey = type === "image" ? "currentImageIndex" : null;
   const newIndex = index + direction;
 
-  if (newIndex < 0 || newIndex >= targetList.length) {
-    return;
-  }
+  if (newIndex < 0 || newIndex >= targetList.length) return;
 
   const movedItem = targetList.splice(index, 1)[0];
   targetList.splice(newIndex, 0, movedItem);
@@ -583,6 +548,7 @@ function updatePreviewStage() {
     elements.previewVideo.pause();
     elements.previewVideo.classList.add("hidden");
     elements.previewVideo.removeAttribute("src");
+    elements.previewVideo.load();
     elements.previewEmptyState.textContent = getPreviewStatusMessage();
     elements.previewEmptyState.classList.remove("hidden");
     return;
@@ -597,8 +563,9 @@ function updatePreviewStage() {
   }
 
   if (!state.renderDirty && state.renderedPreview.url) {
-    if (elements.previewVideo.src !== state.renderedPreview.url) {
+    if (elements.previewVideo.dataset.previewUrl !== state.renderedPreview.url) {
       elements.previewVideo.src = state.renderedPreview.url;
+      elements.previewVideo.dataset.previewUrl = state.renderedPreview.url;
       elements.previewVideo.load();
     }
 
@@ -610,6 +577,8 @@ function updatePreviewStage() {
   elements.previewVideo.pause();
   elements.previewVideo.classList.add("hidden");
   elements.previewVideo.removeAttribute("src");
+  delete elements.previewVideo.dataset.previewUrl;
+  elements.previewVideo.load();
   elements.previewEmptyState.textContent = getPreviewStatusMessage();
   elements.previewEmptyState.classList.remove("hidden");
 }
@@ -655,6 +624,8 @@ function getPreviewStatusMessage() {
 function markRenderDirty() {
   state.renderDirty = true;
 
+  elements.previewVideo.pause();
+
   if (state.renderedPreview.url) {
     URL.revokeObjectURL(state.renderedPreview.url);
   }
@@ -671,27 +642,15 @@ function markRenderDirty() {
 }
 
 function clampIndex(index, length) {
-  if (length <= 0) {
-    return 0;
-  }
-
-  if (index < 0) {
-    return 0;
-  }
-
-  if (index >= length) {
-    return length - 1;
-  }
-
+  if (length <= 0) return 0;
+  if (index < 0) return 0;
+  if (index >= length) return length - 1;
   return index;
 }
 
 function clearTimer(key) {
   const timer = state.timers[key];
-
-  if (!timer) {
-    return;
-  }
+  if (!timer) return;
 
   clearInterval(timer);
   clearTimeout(timer);
@@ -709,18 +668,14 @@ function cleanupObjectUrls() {
 
 function safePlay(mediaElement) {
   const playPromise = mediaElement.play();
-
   if (playPromise && typeof playPromise.then === "function") {
     return playPromise;
   }
-
   return Promise.resolve();
 }
 
 async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) {
-  if (state.exportInProgress) {
-    return;
-  }
+  if (state.exportInProgress) return;
 
   if (state.imageList.length === 0 || state.songList.length === 0) {
     alert("Please add at least one image and one song before rendering.");
@@ -733,7 +688,6 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
   }
 
   const mimeType = getSupportedExportMimeType();
-
   if (!mimeType) {
     alert("Your browser does not support WebM export in MediaRecorder.");
     return;
@@ -749,6 +703,10 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
   let sourceNode;
   let gainNode;
   let recorder;
+  let stream;
+  let videoTrack;
+  let watchdogTimeout = null;
+  let recorderStopResolved = false;
 
   try {
     const durationMs = state.endAfterImages
@@ -766,13 +724,14 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
     canvas.height = 720;
 
     const ctx = canvas.getContext("2d");
-    const stream = canvas.captureStream(30);
+    stream = canvas.captureStream(30);
 
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
     await audioContext.resume();
 
     exportAudio = new Audio();
     exportAudio.preload = "auto";
+    exportAudio.crossOrigin = "anonymous";
 
     sourceNode = audioContext.createMediaElementSource(exportAudio);
     gainNode = audioContext.createGain();
@@ -780,7 +739,6 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
 
     sourceNode.connect(gainNode);
     gainNode.connect(destinationNode);
-    gainNode.connect(audioContext.destination);
 
     destinationNode.stream.getAudioTracks().forEach(track => {
       stream.addTrack(track);
@@ -789,18 +747,13 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
     let exportSongIndex = 0;
 
     exportAudio.onended = async () => {
-      if (!state.exportInProgress) {
-        return;
-      }
+      if (!state.exportInProgress) return;
 
       if (state.endAfterImages) {
         exportSongIndex = (exportSongIndex + 1) % state.songList.length;
       } else {
         exportSongIndex += 1;
-
-        if (exportSongIndex >= state.songList.length) {
-          return;
-        }
+        if (exportSongIndex >= state.songList.length) return;
       }
 
       exportAudio.src = state.songList[exportSongIndex].url;
@@ -827,9 +780,15 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
       }
     };
 
-    const blobPromise = new Promise(resolve => {
+    const blobPromise = new Promise((resolve, reject) => {
       recorder.onstop = () => {
+        recorderStopResolved = true;
         resolve(new Blob(chunks, { type: mimeType }));
+      };
+
+      recorder.onerror = event => {
+        recorderStopResolved = true;
+        reject(new Error(`MediaRecorder error: ${event?.error?.message || "Unknown recorder failure"}`));
       };
     });
 
@@ -842,6 +801,18 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
     }
 
     const startTime = performance.now();
+    const maxRenderMs = durationMs + 15000;
+
+    watchdogTimeout = setTimeout(() => {
+      if (!recorderStopResolved && recorder && recorder.state !== "inactive") {
+        try {
+          recorder.requestData();
+          recorder.stop();
+        } catch (error) {
+          console.warn("Recorder watchdog stop failed.", error);
+        }
+      }
+    }, maxRenderMs);
 
     await new Promise(resolve => {
       function drawFrame(now) {
@@ -850,10 +821,10 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
 
         const remaining = Math.max(0, durationMs - elapsed);
 
-        if (remaining <= 3000) {
-          gainNode.gain.value = Math.max(0, remaining / 3000);
-        } else {
-          gainNode.gain.value = 1;
+        if (gainNode) {
+          gainNode.gain.value = remaining <= 3000
+            ? Math.max(0, remaining / 3000)
+            : 1;
         }
 
         if (elapsed < durationMs) {
@@ -866,10 +837,20 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
       requestAnimationFrame(drawFrame);
     });
 
-    recorder.stop();
+    if (recorder.state !== "inactive") {
+      recorder.requestData();
+      recorder.stop();
+    }
+
     exportAudio.pause();
 
-    const blob = await blobPromise;
+    const blob = await Promise.race([
+      blobPromise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Recorder took too long to finish. Browser stalled during export.")), 10000)
+      )
+    ]);
+
     const previewUrl = URL.createObjectURL(blob);
 
     if (state.renderedPreview.url) {
@@ -898,22 +879,28 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
     console.error(error);
     alert(error.message || "There was an error rendering the preview video.");
   } finally {
+    if (watchdogTimeout) {
+      clearTimeout(watchdogTimeout);
+    }
+
     if (exportAudio) {
       exportAudio.pause();
       exportAudio.src = "";
       exportAudio.onended = null;
     }
 
-    if (sourceNode) {
-      sourceNode.disconnect();
+    if (sourceNode) sourceNode.disconnect();
+    if (gainNode) gainNode.disconnect();
+    if (destinationNode) destinationNode.disconnect();
+
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
     }
 
-    if (gainNode) {
-      gainNode.disconnect();
-    }
-
-    if (destinationNode) {
-      destinationNode.disconnect();
+    if (videoTrack) {
+      try {
+        videoTrack.stop();
+      } catch (_) {}
     }
 
     if (audioContext && audioContext.state !== "closed") {
@@ -943,7 +930,6 @@ function getSupportedExportMimeType() {
 function loadImageForExport(imageItem) {
   return new Promise(resolve => {
     const image = new Image();
-
     image.onload = () => resolve(image);
     image.onerror = () => resolve(null);
     image.src = imageItem.url;
@@ -955,9 +941,7 @@ function drawExportFrame(ctx, images, elapsed, totalDurationMs, canvasWidth, can
   ctx.fillStyle = "#000000";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-  if (!images.length) {
-    return;
-  }
+  if (!images.length) return;
 
   const imageIndex = state.endAfterImages
     ? Math.min(Math.floor(elapsed / state.slideIntervalMs), images.length - 1)
@@ -1028,8 +1012,18 @@ function getSongDurationMs(song) {
 
   return new Promise(resolve => {
     const audio = document.createElement("audio");
+    let resolved = false;
+
+    const finalize = durationMs => {
+      if (resolved) return;
+      resolved = true;
+      song.durationMs = durationMs;
+      cleanup();
+      resolve(durationMs);
+    };
 
     const cleanup = () => {
+      clearTimeout(timeoutId);
       audio.removeEventListener("loadedmetadata", onLoadedMetadata);
       audio.removeEventListener("error", onError);
       audio.src = "";
@@ -1040,16 +1034,16 @@ function getSongDurationMs(song) {
         ? audio.duration * 1000
         : 30000;
 
-      song.durationMs = durationMs;
-      cleanup();
-      resolve(durationMs);
+      finalize(durationMs);
     };
 
     const onError = () => {
-      song.durationMs = 30000;
-      cleanup();
-      resolve(30000);
+      finalize(30000);
     };
+
+    const timeoutId = setTimeout(() => {
+      finalize(30000);
+    }, 5000);
 
     audio.preload = "metadata";
     audio.addEventListener("loadedmetadata", onLoadedMetadata);
