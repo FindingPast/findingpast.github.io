@@ -697,6 +697,10 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
   let recorder = null;
   let stream = null;
   let audio = null;
+  let audioContext = null;
+  let mediaSourceNode = null;
+  let gainNode = null;
+  let destinationNode = null;
   let forcedFinishTimeout = null;
 
   try {
@@ -722,27 +726,25 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
     audio.src = state.songList[0].url;
     audio.loop = state.endAfterImages;
     audio.muted = false;
+    audio.crossOrigin = "anonymous";
 
-    let audioTrackAdded = false;
+    // Web Audio path for recorder-safe audio capture
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    await audioContext.resume();
 
-    try {
-      let audioStream = null;
+    mediaSourceNode = audioContext.createMediaElementSource(audio);
+    gainNode = audioContext.createGain();
+    destinationNode = audioContext.createMediaStreamDestination();
 
-      if (typeof audio.captureStream === "function") {
-        audioStream = audio.captureStream();
-      } else if (typeof audio.mozCaptureStream === "function") {
-        audioStream = audio.mozCaptureStream();
-      }
+    mediaSourceNode.connect(gainNode);
+    gainNode.connect(destinationNode);
 
-      if (audioStream) {
-        const audioTracks = audioStream.getAudioTracks();
-        if (audioTracks.length > 0) {
-          stream.addTrack(audioTracks[0]);
-          audioTrackAdded = true;
-        }
-      }
-    } catch (error) {
-      console.warn("Audio capture failed; continuing without captured audio.", error);
+    // Keep live audible playback while rendering
+    gainNode.connect(audioContext.destination);
+
+    const audioTracks = destinationNode.stream.getAudioTracks();
+    if (audioTracks.length > 0) {
+      stream.addTrack(audioTracks[0]);
     }
 
     const chunks = [];
@@ -847,10 +849,6 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
     updatePreviewStage();
     updateButtonStates();
 
-    if (!audioTrackAdded) {
-      console.warn("Preview rendered, but browser did not expose an audio track for capture.");
-    }
-
     if (downloadAfterRender) {
       downloadBlob(blob, state.renderedPreview.fileName);
     }
@@ -874,6 +872,30 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
     if (audio) {
       audio.pause();
       audio.src = "";
+    }
+
+    if (mediaSourceNode) {
+      try {
+        mediaSourceNode.disconnect();
+      } catch (_) {}
+    }
+
+    if (gainNode) {
+      try {
+        gainNode.disconnect();
+      } catch (_) {}
+    }
+
+    if (destinationNode) {
+      try {
+        destinationNode.disconnect();
+      } catch (_) {}
+    }
+
+    if (audioContext && audioContext.state !== "closed") {
+      try {
+        await audioContext.close();
+      } catch (_) {}
     }
 
     if (stream) {
