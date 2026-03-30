@@ -17,8 +17,17 @@ const state = {
   songList: DEFAULT_SONGS.map(item => ({ ...item })),
   currentImageIndex: 0,
   slideIntervalMs: 5000,
+
   endAfterImages: true,
+
+  imageFadeIn: false,
   imageFadeOut: false,
+  imageFadeDurationMs: 600,
+
+  musicFadeIn: false,
+  musicFadeOut: false,
+  musicFadeDurationMs: 1300,
+
   deletedImage: null,
   deletedSong: null,
   exportInProgress: false,
@@ -71,7 +80,10 @@ function cacheElements() {
   elements.nextImageButton = document.getElementById("nextImageButton");
   elements.intervalSlider = document.getElementById("intervalSlider");
   elements.intervalValue = document.getElementById("intervalValue");
-  elements.imageFadeToggle = document.getElementById("imageFadeToggle");
+  elements.imageFadeInToggle = document.getElementById("imageFadeInToggle");
+  elements.imageFadeOutToggle = document.getElementById("imageFadeOutToggle");
+  elements.imageFadeDurationSlider = document.getElementById("imageFadeDurationSlider");
+  elements.imageFadeDurationValue = document.getElementById("imageFadeDurationValue");
   elements.imageItemsContainer = document.getElementById("imageItemsContainer");
   elements.imageImportButton = document.getElementById("imageImportButton");
   elements.imageFileInput = document.getElementById("imageFileInput");
@@ -82,6 +94,10 @@ function cacheElements() {
   elements.songItemsContainer = document.getElementById("songItemsContainer");
   elements.songImportButton = document.getElementById("songImportButton");
   elements.songFileInput = document.getElementById("songFileInput");
+  elements.musicFadeInToggle = document.getElementById("musicFadeInToggle");
+  elements.musicFadeOutToggle = document.getElementById("musicFadeOutToggle");
+  elements.musicFadeDurationSlider = document.getElementById("musicFadeDurationSlider");
+  elements.musicFadeDurationValue = document.getElementById("musicFadeDurationValue");
   elements.songUndoNotification = document.getElementById("songUndoNotification");
   elements.songUndoMessage = document.getElementById("songUndoMessage");
   elements.songUndoButton = document.getElementById("songUndoButton");
@@ -97,11 +113,18 @@ function bindEvents() {
   elements.downloadButton.addEventListener("click", handleDownloadButtonClick);
 
   elements.endConditionToggle.addEventListener("click", toggleEndCondition);
-  elements.imageFadeToggle.addEventListener("click", toggleImageFade);
 
   elements.prevImageButton.addEventListener("click", prevImage);
   elements.nextImageButton.addEventListener("click", nextImage);
   elements.intervalSlider.addEventListener("input", event => updateInterval(event.target.value));
+
+  elements.imageFadeInToggle.addEventListener("click", toggleImageFadeIn);
+  elements.imageFadeOutToggle.addEventListener("click", toggleImageFadeOut);
+  elements.imageFadeDurationSlider.addEventListener("input", event => updateImageFadeDuration(event.target.value));
+
+  elements.musicFadeInToggle.addEventListener("click", toggleMusicFadeIn);
+  elements.musicFadeOutToggle.addEventListener("click", toggleMusicFadeOut);
+  elements.musicFadeDurationSlider.addEventListener("input", event => updateMusicFadeDuration(event.target.value));
 
   elements.imageImportButton.addEventListener("click", () => elements.imageFileInput.click());
   elements.songImportButton.addEventListener("click", () => elements.songFileInput.click());
@@ -116,8 +139,18 @@ function bindEvents() {
 function initializeControls() {
   elements.intervalSlider.value = String(state.slideIntervalMs / 1000);
   elements.intervalValue.textContent = `${state.slideIntervalMs / 1000} seconds`;
+
   elements.endConditionToggle.textContent = state.endAfterImages ? "Images" : "Songs";
-  elements.imageFadeToggle.textContent = state.imageFadeOut ? "Yes" : "No";
+
+  elements.imageFadeInToggle.textContent = state.imageFadeIn ? "Yes" : "No";
+  elements.imageFadeOutToggle.textContent = state.imageFadeOut ? "Yes" : "No";
+  elements.imageFadeDurationSlider.value = String(state.imageFadeDurationMs / 1000);
+  elements.imageFadeDurationValue.textContent = formatFadeDurationLabel(state.imageFadeDurationMs);
+
+  elements.musicFadeInToggle.textContent = state.musicFadeIn ? "Yes" : "No";
+  elements.musicFadeOutToggle.textContent = state.musicFadeOut ? "Yes" : "No";
+  elements.musicFadeDurationSlider.value = String(state.musicFadeDurationMs / 1000);
+  elements.musicFadeDurationValue.textContent = formatFadeDurationLabel(state.musicFadeDurationMs);
 }
 
 function switchTab(tabName) {
@@ -239,10 +272,52 @@ function toggleEndCondition() {
   markRenderDirty();
 }
 
-function toggleImageFade() {
-  state.imageFadeOut = !state.imageFadeOut;
-  elements.imageFadeToggle.textContent = state.imageFadeOut ? "Yes" : "No";
+function toggleImageFadeIn() {
+  state.imageFadeIn = !state.imageFadeIn;
+  elements.imageFadeInToggle.textContent = state.imageFadeIn ? "Yes" : "No";
   markRenderDirty();
+}
+
+function toggleImageFadeOut() {
+  state.imageFadeOut = !state.imageFadeOut;
+  elements.imageFadeOutToggle.textContent = state.imageFadeOut ? "Yes" : "No";
+  markRenderDirty();
+}
+
+function toggleMusicFadeIn() {
+  state.musicFadeIn = !state.musicFadeIn;
+  elements.musicFadeInToggle.textContent = state.musicFadeIn ? "Yes" : "No";
+  markRenderDirty();
+}
+
+function toggleMusicFadeOut() {
+  state.musicFadeOut = !state.musicFadeOut;
+  elements.musicFadeOutToggle.textContent = state.musicFadeOut ? "Yes" : "No";
+  markRenderDirty();
+}
+
+function updateImageFadeDuration(value) {
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds) || seconds <= 0) return;
+
+  state.imageFadeDurationMs = seconds * 1000;
+  elements.imageFadeDurationValue.textContent = formatFadeDurationLabel(state.imageFadeDurationMs);
+  markRenderDirty();
+}
+
+function updateMusicFadeDuration(value) {
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds) || seconds <= 0) return;
+
+  state.musicFadeDurationMs = seconds * 1000;
+  elements.musicFadeDurationValue.textContent = formatFadeDurationLabel(state.musicFadeDurationMs);
+  markRenderDirty();
+}
+
+function formatFadeDurationLabel(durationMs) {
+  const seconds = durationMs / 1000;
+  const formatted = seconds.toFixed(1).replace(/\.0$/, "");
+  return `${formatted} seconds`;
 }
 
 function handleImageSelect(event) {
@@ -719,7 +794,6 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
     canvas.width = 1280;
     canvas.height = 720;
 
-    // Draw the very first frame before recording starts
     drawExportFrame(ctx, images, 0, durationMs, canvas.width, canvas.height);
 
     stream = canvas.captureStream(30);
@@ -727,9 +801,32 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
     audio = new Audio();
     audio.preload = "auto";
     audio.src = state.songList[0].url;
-    audio.loop = state.endAfterImages;
+    audio.loop = false;
     audio.muted = false;
     audio.crossOrigin = "anonymous";
+
+    let renderSongIndex = 0;
+
+    audio.onended = async () => {
+      if (!state.exportInProgress) return;
+
+      if (state.endAfterImages) {
+        renderSongIndex = (renderSongIndex + 1) % state.songList.length;
+      } else {
+        renderSongIndex += 1;
+        if (renderSongIndex >= state.songList.length) {
+          return;
+        }
+      }
+
+      audio.src = state.songList[renderSongIndex].url;
+
+      try {
+        await safePlay(audio);
+      } catch (error) {
+        console.warn("Audio playback during render failed while advancing songs.", error);
+      }
+    };
 
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
     await audioContext.resume();
@@ -810,6 +907,16 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
 
         drawExportFrame(ctx, images, clampedElapsed, durationMs, canvas.width, canvas.height);
 
+        if (gainNode) {
+          gainNode.gain.value = computeFadeMultiplier(
+            clampedElapsed,
+            durationMs,
+            state.musicFadeIn,
+            state.musicFadeOut,
+            state.musicFadeDurationMs
+          );
+        }
+
         if (elapsed < durationMs) {
           requestAnimationFrame(drawFrame);
         } else {
@@ -872,6 +979,7 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
     if (audio) {
       audio.pause();
       audio.src = "";
+      audio.onended = null;
     }
 
     if (mediaSourceNode) {
@@ -955,14 +1063,36 @@ function drawExportFrame(ctx, images, elapsed, totalDurationMs, canvasWidth, can
     return;
   }
 
-  const remaining = Math.max(0, totalDurationMs - elapsed);
-  let opacity = 1;
-
-  if (state.imageFadeOut && remaining <= 3000) {
-    opacity = remaining / 3000;
-  }
+  const opacity = computeFadeMultiplier(
+    elapsed,
+    totalDurationMs,
+    state.imageFadeIn,
+    state.imageFadeOut,
+    state.imageFadeDurationMs
+  );
 
   drawContainedImageNoUpscale(ctx, image, canvasWidth, canvasHeight, opacity);
+}
+
+function computeFadeMultiplier(elapsedMs, totalDurationMs, fadeInEnabled, fadeOutEnabled, fadeDurationMs) {
+  if (!Number.isFinite(fadeDurationMs) || fadeDurationMs <= 0) {
+    return 1;
+  }
+
+  let multiplier = 1;
+
+  if (fadeInEnabled) {
+    const fadeInProgress = Math.max(0, Math.min(1, elapsedMs / fadeDurationMs));
+    multiplier = Math.min(multiplier, fadeInProgress);
+  }
+
+  if (fadeOutEnabled) {
+    const remainingMs = Math.max(0, totalDurationMs - elapsedMs);
+    const fadeOutProgress = Math.max(0, Math.min(1, remainingMs / fadeDurationMs));
+    multiplier = Math.min(multiplier, fadeOutProgress);
+  }
+
+  return multiplier;
 }
 
 function drawContainedImageNoUpscale(ctx, image, canvasWidth, canvasHeight, opacity) {
