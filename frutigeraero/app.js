@@ -182,12 +182,16 @@ async function handleDownloadButtonClick() {
 async function playRenderedPreview() {
   if (!state.renderedPreview.url) return;
 
-  elements.previewVideo.currentTime = 0;
-
   try {
-    await safePlay(elements.previewVideo);
-  } catch (error) {
-    console.warn("Preview playback failed.", error);
+    elements.previewVideo.currentTime = 0;
+  } catch (_) {}
+
+  const playPromise = elements.previewVideo.play();
+
+  if (playPromise && typeof playPromise.then === "function") {
+    playPromise.catch(error => {
+      console.warn("Preview playback failed.", error);
+    });
   }
 }
 
@@ -550,7 +554,7 @@ function updatePreviewStage() {
   if (state.exportInProgress) {
     elements.previewVideo.pause();
     elements.previewVideo.classList.add("hidden");
-    elements.previewEmptyState.textContent = "Rendering preview video… this takes about as long as the video itself.";
+    elements.previewEmptyState.textContent = "Rendering preview video... this takes about as long as the video itself.";
     elements.previewEmptyState.classList.remove("hidden");
     return;
   }
@@ -587,8 +591,8 @@ function updateButtonStates() {
   elements.downloadButton.disabled = !hasImages || !hasSongs || state.exportInProgress;
 
   if (state.exportInProgress) {
-    elements.previewControlButton.textContent = "Rendering Preview…";
-    elements.downloadButton.textContent = "Rendering Video…";
+    elements.previewControlButton.textContent = "Rendering Preview...";
+    elements.downloadButton.textContent = "Rendering Video...";
     return;
   }
 
@@ -814,11 +818,7 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
       requestAnimationFrame(drawFrame);
     });
 
-    if (audioTrackAdded) {
-      if (state.endAfterImages && audio) {
-        audio.pause();
-      }
-    } else if (audio) {
+    if (audio) {
       audio.pause();
     }
 
@@ -842,11 +842,13 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
     };
 
     state.renderDirty = false;
+
+    state.exportInProgress = false;
     updatePreviewStage();
     updateButtonStates();
 
     if (!audioTrackAdded) {
-      alert("Preview rendered, but your browser did not expose the audio track for capture. The file may be silent.");
+      console.warn("Preview rendered, but browser did not expose an audio track for capture.");
     }
 
     if (downloadAfterRender) {
@@ -854,11 +856,16 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
     }
 
     if (autoPlayAfterRender) {
-      await playRenderedPreview();
+      setTimeout(() => {
+        playRenderedPreview();
+      }, 50);
     }
   } catch (error) {
     console.error(error);
     alert(error.message || "There was an error rendering the preview video.");
+    state.exportInProgress = false;
+    updatePreviewStage();
+    updateButtonStates();
   } finally {
     if (forcedFinishTimeout) {
       clearTimeout(forcedFinishTimeout);
@@ -876,10 +883,6 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
         } catch (_) {}
       });
     }
-
-    state.exportInProgress = false;
-    updatePreviewStage();
-    updateButtonStates();
   }
 }
 
