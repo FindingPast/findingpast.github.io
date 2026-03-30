@@ -719,6 +719,9 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
     canvas.width = 1280;
     canvas.height = 720;
 
+    // Draw the very first frame before recording starts
+    drawExportFrame(ctx, images, 0, durationMs, canvas.width, canvas.height);
+
     stream = canvas.captureStream(30);
 
     audio = new Audio();
@@ -728,7 +731,6 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
     audio.muted = false;
     audio.crossOrigin = "anonymous";
 
-    // Web Audio path for recorder-safe audio capture
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
     await audioContext.resume();
 
@@ -738,8 +740,6 @@ async function renderPreviewVideo({ autoPlayAfterRender, downloadAfterRender }) 
 
     mediaSourceNode.connect(gainNode);
     gainNode.connect(destinationNode);
-
-    // Keep live audible playback while rendering
     gainNode.connect(audioContext.destination);
 
     const audioTracks = destinationNode.stream.getAudioTracks();
@@ -921,7 +921,18 @@ function getSupportedExportMimeType() {
 function loadImageForExport(imageItem) {
   return new Promise(resolve => {
     const image = new Image();
-    image.onload = () => resolve(image);
+
+    image.onload = async () => {
+      try {
+        if (typeof image.decode === "function") {
+          await image.decode();
+        }
+      } catch (_) {
+        // Ignore decode weirdness and still use the loaded image
+      }
+      resolve(image);
+    };
+
     image.onerror = () => resolve(null);
     image.src = imageItem.url;
   });
@@ -941,10 +952,6 @@ function drawExportFrame(ctx, images, elapsed, totalDurationMs, canvasWidth, can
   const image = images[imageIndex];
 
   if (!image) {
-    ctx.fillStyle = "#888888";
-    ctx.font = "28px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("Image could not be loaded", canvasWidth / 2, canvasHeight / 2);
     return;
   }
 
